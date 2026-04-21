@@ -1,6 +1,15 @@
+<<<<<<< HEAD
 streamlit
 pandas
 gspread
 oauth2client
 xlsxwriter
 openpyxl
+=======
+streamlit
+pandas
+gspread
+oauth2client
+xlsxwriter
+openpyxl
+>>>>>>> 93a2edf3b40fcc8a87729a2f6123a0430879b40e
