@@ -70,23 +70,34 @@ function parseExcel(file: File): Promise<FileParseResult> {
   });
 }
 
-export function generateExcel(data: DataRow[], filename: string): void {
-  const worksheet = XLSX.utils.json_to_sheet(data);
+export function generateExcel(data: DataRow[], filename: string, columnsOrder?: string[]): void {
+  // Determine which columns to export and in what order
+  const allKeys = data.length > 0 ? Object.keys(data[0]) : [];
+  const exportCols = columnsOrder
+    ? columnsOrder.filter(c => allKeys.includes(c))  // only cols in target order
+    : allKeys;                                         // all columns (tanpa format)
 
-  // Set column widths
-  const colWidths: { [key: string]: number } = {};
-  const columns = data.length > 0 ? Object.keys(data[0]) : [];
-  columns.forEach((col, idx) => {
-    const maxLen = Math.max(
-      col.length,
-      ...data.map(row => String(row[col] || '').length)
-    );
-    colWidths[XLSX.utils.encode_col(idx)] = Math.min(maxLen + 2, 50);
+  // Build plain objects with only the needed keys (in order)
+  const exportData = data.map(row => {
+    const out: Record<string, unknown> = {};
+    for (const col of exportCols) {
+      out[col] = row[col] ?? '';
+    }
+    return out;
   });
-  worksheet['!cols'] = Object.entries(colWidths).map(([_, width]) => ({ wch: width }));
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData, { header: exportCols });
+
+  // Auto column widths
+  worksheet['!cols'] = exportCols.map(col => ({
+    wch: Math.min(
+      Math.max(col.length, ...data.map(r => String(r[col] ?? '').length)) + 2,
+      50
+    ),
+  }));
 
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Cleaned Data');
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
 
   const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
   const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -100,3 +111,4 @@ export function generateExcel(data: DataRow[], filename: string): void {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+

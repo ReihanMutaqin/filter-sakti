@@ -154,13 +154,15 @@ export function useAppState() {
     if (!processedData || !processedData.length) return;
     const now = new Date();
     const dateStr = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${now.getFullYear()}`;
-    generateExcel(processedData, `FilterSakti_${mode}_${dateStr}.xlsx`);
-  }, [processedData, mode]);
+    // Pass `columns` → Excel hanya export kolom yang tampil di tabel, urutan sama
+    generateExcel(processedData, `FilterSakti_${mode}_${dateStr}.xlsx`, columns);
+  }, [processedData, columns, mode]);
 
   const handleDownloadRaw = useCallback(() => {
     if (!rawProcessedData || !rawProcessedData.length) return;
     const now = new Date();
     const dateStr = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${now.getFullYear()}`;
+    // Tidak pass columns → export semua kolom asli
     generateExcel(rawProcessedData, `FilterSakti_${mode}_AllKolom_${dateStr}.xlsx`);
   }, [rawProcessedData, mode]);
 
