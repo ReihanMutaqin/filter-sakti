@@ -19,16 +19,6 @@ interface SidebarProps {
   onClearMainFile: () => void;
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] mb-2" style={{ color: '#37475A' }}>
-      {children}
-    </p>
-  );
-}
-
-const MONTH_ABBR = MONTH_NAMES;
-
 export function Sidebar({
   mode, status, error, sheetStatus, sheetTotalRows,
   selectedMonths, mainFile, onMainFileUpload,
@@ -37,15 +27,13 @@ export function Sidebar({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.currentTarget.classList.add('drag-over');
+    e.preventDefault(); e.currentTarget.classList.add('drag-over');
   }, []);
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.currentTarget.classList.remove('drag-over');
   }, []);
   const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.currentTarget.classList.remove('drag-over');
+    e.preventDefault(); e.currentTarget.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
     if (file) onMainFileUpload(file);
   }, [onMainFileUpload]);
@@ -59,57 +47,50 @@ export function Sidebar({
     WAPPR: 'AO / PDA · Status WAPPR',
   };
 
+  const label = (text: string) => (
+    <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9CA3AF', marginBottom: 6 }}>{text}</p>
+  );
+
   return (
     <motion.aside
-      initial={{ opacity: 0, x: -12 }}
+      initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
-      className="fixed left-0 bottom-0 w-[256px] flex flex-col overflow-y-auto"
+      transition={{ duration: 0.25 }}
       style={{
-        top: '52px',
-        backgroundColor: '#0F1520',
-        borderRight: '1px solid #1C2738',
+        position: 'fixed', top: 52, left: 0, bottom: 0, width: 256,
+        backgroundColor: '#FFFFFF',
+        borderRight: '1px solid #E2E5EA',
+        display: 'flex', flexDirection: 'column',
+        overflowY: 'auto',
       }}
     >
-      <div className="flex-1 p-4 space-y-5">
+      <div style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: 18 }}>
 
-        {/* GSheet connection */}
+        {/* GSheet Status */}
         <div>
-          <SectionLabel>Google Sheets</SectionLabel>
-          <div
-            className="flex items-center gap-2.5 p-2.5 rounded-lg"
-            style={{
-              backgroundColor: '#0C1018',
-              border: `1px solid ${
-                sheetStatus === 'connected' ? '#1C3328' :
-                sheetStatus === 'error'     ? '#3A1F1F' : '#1C2738'
-              }`,
-            }}
-          >
-            <div
-              className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
-              style={{
-                backgroundColor: sheetStatus === 'connected' ? '#0E2018' : '#111820',
-              }}
-            >
+          {label('Google Sheets')}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '10px 12px', borderRadius: 8,
+            backgroundColor: sheetStatus === 'connected' ? '#F0FDF4' : sheetStatus === 'error' ? '#FEF2F2' : '#F9FAFB',
+            border: `1px solid ${sheetStatus === 'connected' ? '#BBF7D0' : sheetStatus === 'error' ? '#FECACA' : '#E2E5EA'}`,
+          }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              backgroundColor: sheetStatus === 'connected' ? '#DCFCE7' : '#F3F4F6',
+            }}>
               {sheetStatus === 'connecting'
-                ? <Loader2 className="w-3.5 h-3.5 animate-spin-slow" style={{ color: '#37475A' }} />
-                : <Database className="w-3.5 h-3.5" style={{
-                    color: sheetStatus === 'connected' ? '#4A8F68' :
-                           sheetStatus === 'error'     ? '#8F4A4A' : '#37475A'
-                  }} />
+                ? <Loader2 style={{ width: 14, height: 14, color: '#9CA3AF' }} className="animate-spin-slow" />
+                : <Database style={{ width: 14, height: 14, color: sheetStatus === 'connected' ? '#166534' : sheetStatus === 'error' ? '#C0392B' : '#9CA3AF' }} />
               }
             </div>
-            <div className="min-w-0">
-              <p className="text-[12px] font-medium" style={{
-                color: sheetStatus === 'connected' ? '#5FA07A' :
-                       sheetStatus === 'error'     ? '#A06060' : '#445566'
-              }}>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: sheetStatus === 'connected' ? '#166534' : sheetStatus === 'error' ? '#C0392B' : '#6B7280' }}>
                 {sheetStatus === 'connecting' && 'Menghubungkan...'}
-                {sheetStatus === 'connected'  && 'Terhubung'}
-                {sheetStatus === 'error'      && 'Gagal terhubung'}
+                {sheetStatus === 'connected' && 'Terhubung'}
+                {sheetStatus === 'error' && 'Gagal terhubung'}
               </p>
-              <p className="text-[11px] truncate" style={{ color: '#37475A' }}>
+              <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {sheetStatus === 'connected' && sheetTotalRows !== undefined
                   ? `${sheetTotalRows.toLocaleString()} baris di sheet`
                   : 'GDOC WSA FULFILLMENT'}
@@ -119,79 +100,76 @@ export function Sidebar({
         </div>
 
         {/* Divider */}
-        <div style={{ height: '1px', backgroundColor: '#1C2738' }} />
+        <div style={{ height: 1, backgroundColor: '#F3F4F6' }} />
 
-        {/* File Upload */}
+        {/* Upload */}
         <div>
-          <SectionLabel>Upload Data</SectionLabel>
+          {label('Upload Data')}
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => inputRef.current?.click()}
-            className={`relative h-[116px] rounded-lg border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1.5 transition-all duration-150 ${error ? 'animate-shake' : ''}`}
+            className={error ? 'animate-shake' : ''}
             style={{
-              borderColor: error ? '#5A2E2E' :
-                           mainFile ? '#2A4A36' : '#1C2738',
-              backgroundColor: error ? '#130D0D' :
-                                mainFile ? '#0D1812' : '#0C1018',
+              position: 'relative',
+              height: 110,
+              borderRadius: 8,
+              border: `2px dashed ${error ? '#FECACA' : mainFile ? '#BBF7D0' : '#D1D5DB'}`,
+              backgroundColor: error ? '#FEF2F2' : mainFile ? '#F0FDF4' : '#F9FAFB',
+              cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+              transition: 'all 0.15s',
             }}
           >
-            <input
-              ref={inputRef}
-              type="file"
-              accept=".xlsx,.xls,.csv"
-              className="hidden"
-              onChange={e => { const f = e.target.files?.[0]; if (f) onMainFileUpload(f); }}
-            />
+            <input ref={inputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) onMainFileUpload(f); }} />
             {mainFile ? (
               <>
-                <Check className="w-4 h-4" style={{ color: '#4A8F68' }} />
-                <span className="text-[12px] px-3 text-center truncate max-w-full font-medium" style={{ color: '#7AACCA' }}>
+                <Check style={{ width: 18, height: 18, color: '#166534' }} />
+                <span style={{ fontSize: 12, fontWeight: 500, color: '#166534', padding: '0 12px', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
                   {mainFile.name}
                 </span>
                 <button
                   onClick={e => { e.stopPropagation(); onClearMainFile(); }}
-                  className="absolute top-2 right-2 p-1 rounded"
-                  style={{ color: '#37475A' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = '#7AACCA')}
-                  onMouseLeave={e => (e.currentTarget.style.color = '#37475A')}
+                  style={{ position: 'absolute', top: 8, right: 8, padding: 4, borderRadius: 4, border: 'none', backgroundColor: 'transparent', cursor: 'pointer', color: '#9CA3AF' }}
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X style={{ width: 13, height: 13 }} />
                 </button>
               </>
             ) : (
               <>
-                <Upload className="w-4 h-4" style={{ color: '#37475A' }} />
-                <span className="text-[12px]" style={{ color: '#37475A' }}>Klik atau drop file di sini</span>
-                <span className="text-[11px]" style={{ color: '#253347' }}>.xlsx · .xls · .csv</span>
+                <Upload style={{ width: 18, height: 18, color: '#9CA3AF' }} />
+                <span style={{ fontSize: 12, color: '#6B7280' }}>Klik atau drop file di sini</span>
+                <span style={{ fontSize: 11, color: '#9CA3AF' }}>.xlsx · .xls · .csv</span>
               </>
             )}
           </div>
           {error && (
-            <div className="flex items-start gap-1.5 mt-1.5">
-              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#8F4A4A' }} />
-              <span className="text-[11px] leading-4" style={{ color: '#A06060' }}>{error}</span>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginTop: 6 }}>
+              <AlertCircle style={{ width: 13, height: 13, color: '#C0392B', flexShrink: 0, marginTop: 1 }} />
+              <span style={{ fontSize: 11, color: '#C0392B', lineHeight: 1.4 }}>{error}</span>
             </div>
           )}
         </div>
 
         {/* Month Filter */}
         <div>
-          <SectionLabel>Filter Bulan</SectionLabel>
-          <div className="grid grid-cols-4 gap-1">
-            {MONTH_ABBR.map((name, idx) => {
+          {label('Filter Bulan')}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+            {MONTH_NAMES.map((name, idx) => {
               const m = idx + 1;
               const active = selectedMonths.includes(m);
               return (
                 <button
                   key={m}
                   onClick={() => onToggleMonth(m)}
-                  className="h-8 rounded text-[11px] font-medium transition-all duration-100"
                   style={{
-                    backgroundColor: active ? '#1C3348' : '#0C1018',
-                    color: active ? '#7AACCA' : '#37475A',
-                    border: `1px solid ${active ? '#2A4A62' : '#1C2738'}`,
+                    height: 30, borderRadius: 6, fontSize: 11, fontWeight: 600,
+                    border: `1px solid ${active ? '#FECACA' : '#E2E5EA'}`,
+                    backgroundColor: active ? '#FEF2F2' : '#FFFFFF',
+                    color: active ? '#C0392B' : '#6B7280',
+                    cursor: 'pointer', transition: 'all 0.1s',
                   }}
                 >
                   {name}
@@ -201,37 +179,40 @@ export function Sidebar({
           </div>
         </div>
 
-        {/* Process Button */}
+        {/* Process */}
         <button
           onClick={onProcess}
           disabled={!canProcess}
-          className="w-full h-10 rounded-lg text-[13px] font-semibold transition-all duration-150 flex items-center justify-center gap-2"
           style={{
-            backgroundColor: canProcess ? '#1C3348' : '#0F1820',
-            color: canProcess ? '#7AACCA' : '#2A3F52',
-            border: `1px solid ${canProcess ? '#2A4A62' : '#1A2738'}`,
+            width: '100%', height: 40, borderRadius: 8,
+            fontSize: 13, fontWeight: 600,
+            border: `1px solid ${canProcess ? '#C0392B' : '#E2E5EA'}`,
+            backgroundColor: canProcess ? '#C0392B' : '#F9FAFB',
+            color: canProcess ? '#FFFFFF' : '#D1D5DB',
             cursor: canProcess ? 'pointer' : 'not-allowed',
+            transition: 'all 0.15s',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}
-          onMouseEnter={e => { if (canProcess) { e.currentTarget.style.backgroundColor = '#213D58'; e.currentTarget.style.borderColor = '#3A6080'; } }}
-          onMouseLeave={e => { if (canProcess) { e.currentTarget.style.backgroundColor = '#1C3348'; e.currentTarget.style.borderColor = '#2A4A62'; } }}
+          onMouseEnter={e => { if (canProcess) e.currentTarget.style.backgroundColor = '#A93226'; }}
+          onMouseLeave={e => { if (canProcess) e.currentTarget.style.backgroundColor = '#C0392B'; }}
         >
-          {isProcessing ? (
-            <><Loader2 className="w-4 h-4 animate-spin-slow" />Memproses...</>
-          ) : 'Proses Data'}
+          {isProcessing
+            ? <><Loader2 style={{ width: 15, height: 15 }} className="animate-spin-slow" />Memproses...</>
+            : 'Proses Data'
+          }
         </button>
 
         {/* Mode info */}
-        <div className="rounded-lg p-3" style={{ backgroundColor: '#0C1018', border: '1px solid #1C2738' }}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: '#253347' }}>Mode</p>
-          <p className="text-[12px] font-medium" style={{ color: '#5A8FA8' }}>{mode}</p>
-          <p className="text-[11px] mt-0.5" style={{ color: '#37475A' }}>{modeDesc[mode]}</p>
+        <div style={{ borderRadius: 8, padding: '10px 12px', backgroundColor: '#F9FAFB', border: '1px solid #E2E5EA' }}>
+          <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9CA3AF', marginBottom: 4 }}>Mode aktif</p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#C0392B' }}>{mode}</p>
+          <p style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>{modeDesc[mode]}</p>
         </div>
-
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-3" style={{ borderTop: '1px solid #1C2738' }}>
-        <p className="text-[11px]" style={{ color: '#253347' }}>Filter Sakti · v2.1</p>
+      <div style={{ padding: '12px 16px', borderTop: '1px solid #F3F4F6' }}>
+        <p style={{ fontSize: 11, color: '#D1D5DB' }}>Filter Sakti · v2.1</p>
       </div>
     </motion.aside>
   );

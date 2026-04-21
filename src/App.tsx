@@ -27,49 +27,31 @@ export default function App() {
   const showEmpty   = !mainFile && status === 'idle';
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0C1018' }}>
-      <Header
-        mode={mode}
-        onModeChange={handleModeChange}
-        sheetStatus={sheetStatus}
-        sheetName={sheetInfo?.sheetName}
-        onRetry={retrySheetFetch}
-      />
+    <div style={{ minHeight: '100vh', backgroundColor: '#F4F5F7' }}>
+      <Header mode={mode} onModeChange={handleModeChange} sheetStatus={sheetStatus} sheetName={sheetInfo?.sheetName} onRetry={retrySheetFetch} />
 
       <Sidebar
-        mode={mode}
-        status={status}
-        error={error}
-        sheetStatus={sheetStatus}
-        sheetTotalRows={sheetInfo?.totalRows}
-        selectedMonths={selectedMonths}
-        mainFile={mainFile}
-        onMainFileUpload={handleMainFileUpload}
-        onProcess={handleProcess}
-        onToggleMonth={toggleMonth}
-        onClearMainFile={clearMainFile}
+        mode={mode} status={status} error={error}
+        sheetStatus={sheetStatus} sheetTotalRows={sheetInfo?.totalRows}
+        selectedMonths={selectedMonths} mainFile={mainFile}
+        onMainFileUpload={handleMainFileUpload} onProcess={handleProcess}
+        onToggleMonth={toggleMonth} onClearMainFile={clearMainFile}
       />
 
-      {/* Main */}
       <motion.main
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="min-h-screen"
-        style={{ marginLeft: '256px', paddingTop: '52px', backgroundColor: '#0C1018' }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }}
+        style={{ marginLeft: 256, paddingTop: 52, minHeight: '100vh', backgroundColor: '#F4F5F7' }}
       >
-        <div className="p-6 space-y-5 max-w-[1400px]">
+        <div style={{ padding: 24, maxWidth: 1400, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           {/* Title */}
-          <div style={{ paddingBottom: '4px', borderBottom: '1px solid #1C2738' }}>
-            <div className="flex items-baseline gap-2">
-              <h1 className="text-[18px] font-heading font-bold" style={{ color: '#8BBDD4', letterSpacing: '-0.3px' }}>
-                {mode}
-              </h1>
-              <span className="text-[13px]" style={{ color: '#37475A' }}>/</span>
-              <span className="text-[13px]" style={{ color: '#445566' }}>Dashboard</span>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 10, padding: '16px 20px', border: '1px solid #E2E5EA' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: '#C0392B', fontFamily: 'Plus Jakarta Sans' }}>{mode}</span>
+              <span style={{ fontSize: 14, color: '#D1D5DB' }}>/</span>
+              <span style={{ fontSize: 14, color: '#9CA3AF' }}>Dashboard</span>
             </div>
-            <p className="text-[12px] mt-0.5" style={{ color: '#37475A' }}>{MODE_DESC[mode]}</p>
+            <p style={{ fontSize: 12, color: '#9CA3AF', marginTop: 3 }}>{MODE_DESC[mode]}</p>
           </div>
 
           {/* Metrics */}
@@ -79,40 +61,24 @@ export default function App() {
           <DataTable data={processedData || []} columns={columns} visible={showResults} />
 
           {/* Download */}
-          <DownloadButton
-            onClick={handleDownload}
-            disabled={!showResults}
-            mode={mode}
-            rowCount={showResults ? processedData!.length : undefined}
-          />
+          <DownloadButton onClick={handleDownload} disabled={!showResults} mode={mode} rowCount={showResults ? processedData!.length : undefined} />
 
-          {/* Empty State */}
+          {/* Empty */}
           {showEmpty && (
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
-              className="flex flex-col items-center justify-center py-20 text-center"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0', textAlign: 'center' }}
             >
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                style={{ backgroundColor: '#111820', border: '1px solid #1C2738' }}
-              >
-                <FileSpreadsheet className="w-6 h-6" style={{ color: '#37475A' }} />
+              <div style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: '#FFFFFF', border: '1px solid #E2E5EA', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <FileSpreadsheet style={{ width: 22, height: 22, color: '#D1D5DB' }} />
               </div>
-              <p className="text-[14px] font-medium mb-1.5" style={{ color: '#5A6B7C' }}>Siap memproses</p>
-              <p className="text-[12px] max-w-[300px] leading-relaxed" style={{ color: '#37475A' }}>
-                Upload file data di sidebar. Deduplikasi akan berjalan otomatis dengan data Google Sheets.
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Siap memproses</p>
+              <p style={{ fontSize: 12, color: '#9CA3AF', maxWidth: 300, lineHeight: 1.6 }}>
+                Upload file data di sidebar. Deduplikasi berjalan otomatis menggunakan data Google Sheets.
               </p>
-              <div className="flex items-center gap-2 mt-5">
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                 {['.xlsx', '.xls', '.csv'].map(ext => (
-                  <span
-                    key={ext}
-                    className="text-[11px] px-2.5 py-1 rounded"
-                    style={{ backgroundColor: '#111820', color: '#37475A', border: '1px solid #1C2738' }}
-                  >
-                    {ext}
-                  </span>
+                  <span key={ext} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 6, backgroundColor: '#FFFFFF', border: '1px solid #E2E5EA', color: '#9CA3AF' }}>{ext}</span>
                 ))}
               </div>
             </motion.div>
@@ -120,16 +86,11 @@ export default function App() {
 
           {/* Processing */}
           {status === 'processing' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-20"
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 0' }}
             >
-              <div
-                className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin-slow mb-3"
-                style={{ borderColor: '#2A4A62', borderTopColor: 'transparent' }}
-              />
-              <p className="text-[12px]" style={{ color: '#445566' }}>Memproses data...</p>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid #E2E5EA', borderTopColor: '#C0392B' }} className="animate-spin-slow" />
+              <p style={{ fontSize: 12, color: '#9CA3AF', marginTop: 14 }}>Memproses data...</p>
             </motion.div>
           )}
         </div>

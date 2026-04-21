@@ -10,8 +10,8 @@ const SHEET_NAME_MAP: Record<string, string | null> = {
 };
 
 const CHECK_COL_MAP: Record<string, string> = {
-  WSA: 'Workorder',
-  WAPPR: 'Workorder',
+  WSA:      'SC Order No/Track ID/CSRM No',
+  WAPPR:    'Workorder',
   MODOROSO: 'Workorder',
 };
 
@@ -96,9 +96,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const headers = rows[0] as string[];
-    const colIdx = headers.indexOf(checkCol);
+    // Trim whitespace on headers to avoid invisible mismatch
+    const colIdx = headers.findIndex(h => h.trim() === checkCol.trim());
     const ids: string[] = colIdx >= 0
-      ? rows.slice(1).map(r => String(r[colIdx] ?? '').replace(/\.0$/, '').trim()).filter(Boolean)
+      ? rows.slice(1)
+          .map(r => String(r[colIdx] ?? '')
+            .trim()
+            .replace(/\.0$/, '')   // strip float suffix
+            .split('_')[0]         // strip _suffix (same as Python x.split('_')[0])
+            .trim())
+          .filter(Boolean)
       : [];
 
     return res.status(200).json({

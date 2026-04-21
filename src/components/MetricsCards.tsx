@@ -7,60 +7,46 @@ interface MetricsCardsProps {
   rawCount?: number;
 }
 
-export function MetricsCards({ metrics, visible, rawCount }: MetricsCardsProps) {
+export function MetricsCards({ metrics, visible }: MetricsCardsProps) {
   if (!visible) return null;
-
   const dupes = metrics.filtered - metrics.unique;
 
   const cards = [
-    {
-      label: 'Data Terfilter',
-      value: metrics.filtered.toLocaleString(),
-      sub: rawCount ? `dari ${rawCount.toLocaleString()} total` : undefined,
-      accent: false,
-    },
-    {
-      label: 'Data Unik',
-      value: metrics.unique.toLocaleString(),
-      sub: dupes > 0 ? `${dupes.toLocaleString()} duplikat dihapus` : 'Tidak ada duplikat',
-      accent: true,
-    },
-    {
-      label: 'Kolom Dedup',
-      value: metrics.checkColumn,
-      sub: 'Kolom referensi GSheet',
-      mono: true,
-      accent: false,
-    },
+    { label: 'Data Terfilter', value: metrics.filtered.toLocaleString(), sub: 'Lolos filter mode', red: false },
+    { label: 'Data Unik',      value: metrics.unique.toLocaleString(),   sub: `${dupes.toLocaleString()} duplikat dihapus`, red: true },
+    { label: 'Kolom Dedup',    value: metrics.checkColumn,               sub: 'Referensi GSheet', mono: true, red: false },
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
       {cards.map((c, i) => (
         <motion.div
           key={c.label}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.06, duration: 0.35 }}
-          className="rounded-xl p-4"
+          transition={{ delay: i * 0.06, duration: 0.3 }}
           style={{
-            backgroundColor: '#0F1520',
-            border: '1px solid #1C2738',
-            borderLeft: `3px solid ${c.accent ? '#3D6E8C' : '#1C2738'}`,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #E2E5EA',
+            borderLeft: `3px solid ${c.red ? '#C0392B' : '#E2E5EA'}`,
+            borderRadius: 10,
+            padding: '16px 18px',
           }}
         >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.09em] mb-2" style={{ color: '#37475A' }}>
+          <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9CA3AF', marginBottom: 8 }}>
             {c.label}
           </p>
-          <p
-            className={c.mono ? 'text-[12px] font-mono leading-snug' : 'text-[26px] font-heading font-bold leading-none'}
-            style={{ color: c.accent ? '#6A9AB5' : '#8A9BAC' }}
-          >
+          <p style={{
+            fontSize: c.mono ? 12 : 28,
+            fontWeight: 700,
+            color: c.red ? '#C0392B' : '#111827',
+            fontFamily: c.mono ? 'JetBrains Mono, monospace' : 'Plus Jakarta Sans, sans-serif',
+            lineHeight: 1,
+            wordBreak: 'break-all',
+          }}>
             {c.value}
           </p>
-          {c.sub && (
-            <p className="text-[11px] mt-1.5" style={{ color: '#37475A' }}>{c.sub}</p>
-          )}
+          <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 6 }}>{c.sub}</p>
         </motion.div>
       ))}
     </div>

@@ -76,7 +76,7 @@ function processWSA(data: DataRow[]): { filtered: DataRow[]; checkCol: string } 
     df = fillContactNumbers(df);
   }
 
-  return { filtered: df, checkCol: 'Workorder' };
+  return { filtered: df, checkCol: SC_COL };
 }
 
 function processMODOROSO(data: DataRow[]): { filtered: DataRow[]; checkCol: string } {

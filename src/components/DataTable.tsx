@@ -12,19 +12,22 @@ interface DataTableProps {
 const ROWS_PER_PAGE = 50;
 
 export function DataTable({ data, columns, visible }: DataTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [page, setPage] = useState(1);
   const [copied, setCopied] = useState(false);
 
+  // Copy WITHOUT header row — hanya data
   const handleCopy = useCallback(() => {
-    const header = columns.join('\t');
-    const rows = data
-      .map(row => columns.map(col => {
-        const val = row[col];
-        if (val === null || val === undefined) return '';
-        return String(val);
-      }).join('\t'))
+    const text = data
+      .map(row =>
+        columns.map(col => {
+          const v = row[col];
+          if (v === null || v === undefined) return '';
+          return String(v);
+        }).join('\t')
+      )
       .join('\n');
-    navigator.clipboard.writeText(`${header}\n${rows}`).then(() => {
+
+    navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -32,79 +35,69 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
 
   if (!visible) return null;
 
-  const totalPages = Math.ceil(data.length / ROWS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ROWS_PER_PAGE;
-  const pageData = data.slice(startIdx, startIdx + ROWS_PER_PAGE);
+  const total = Math.ceil(data.length / ROWS_PER_PAGE);
+  const start = (page - 1) * ROWS_PER_PAGE;
+  const pageData = data.slice(start, start + ROWS_PER_PAGE);
+  const fmt = (v: unknown) => (v === null || v === undefined) ? '' : String(v);
 
-  const fmt = (val: unknown): string => {
-    if (val === null || val === undefined) return '';
-    if (typeof val === 'boolean') return val ? 'Ya' : 'Tidak';
-    return String(val);
-  };
+  const btnStyle = {
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: 28, height: 28, borderRadius: 6,
+    border: '1px solid #E2E5EA', backgroundColor: '#FFFFFF',
+    cursor: 'pointer', color: '#6B7280',
+    transition: 'all 0.15s',
+  } as React.CSSProperties;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: 0.15 }}
+      transition={{ duration: 0.3, delay: 0.1 }}
     >
-      {/* Table Header Bar */}
-      <div className="flex items-center justify-between mb-2.5">
-        <div className="flex items-center gap-2.5">
-          <h3 className="text-[13px] font-semibold" style={{ color: '#8BBDD4' }}>
+      {/* Header bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#111827', fontFamily: 'Plus Jakarta Sans' }}>
             Data Unik
-          </h3>
-          <span
-            className="text-[11px] px-2 py-0.5 rounded"
-            style={{ backgroundColor: '#1C2738', color: '#5A6B7C' }}
-          >
+          </span>
+          <span style={{
+            fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
+            backgroundColor: '#FEF2F2', color: '#C0392B', border: '1px solid #FECACA'
+          }}>
             {data.length.toLocaleString()} baris
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Copy All Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {/* Copy button — NO header */}
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all duration-150"
             style={{
-              backgroundColor: copied ? '#0E1E16' : '#111820',
-              color: copied ? '#4A8F68' : '#5A6B7C',
-              border: `1px solid ${copied ? '#1E3328' : '#1C2738'}`,
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 500,
+              border: `1px solid ${copied ? '#BBF7D0' : '#E2E5EA'}`,
+              backgroundColor: copied ? '#F0FDF4' : '#FFFFFF',
+              color: copied ? '#166534' : '#6B7280',
+              cursor: 'pointer', transition: 'all 0.15s',
             }}
-            title="Salin semua data ke clipboard"
           >
             {copied
-              ? <><Check className="w-3.5 h-3.5" />Tersalin!</>
-              : <><Copy className="w-3.5 h-3.5" />Salin Semua</>
+              ? <><Check style={{ width: 13, height: 13 }} />Tersalin!</>
+              : <><Copy style={{ width: 13, height: 13 }} />Salin Data</>
             }
           </button>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-1.5 rounded transition-colors disabled:opacity-25"
-                style={{ color: '#5A6B7C', border: '1px solid #1C2738' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#7AACCA')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#5A6B7C')}
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
+          {total > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button style={btnStyle} onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+                <ChevronLeft style={{ width: 14, height: 14 }} />
               </button>
-              <span className="text-[11px] px-2" style={{ color: '#445566' }}>
-                {currentPage} / {totalPages}
+              <span style={{ fontSize: 12, color: '#6B7280', minWidth: 50, textAlign: 'center' }}>
+                {page} / {total}
               </span>
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="p-1.5 rounded transition-colors disabled:opacity-25"
-                style={{ color: '#5A6B7C', border: '1px solid #1C2738' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#7AACCA')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#5A6B7C')}
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
+              <button style={btnStyle} onClick={() => setPage(p => Math.min(total, p + 1))} disabled={page === total}>
+                <ChevronRight style={{ width: 14, height: 14 }} />
               </button>
             </div>
           )}
@@ -112,66 +105,51 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #1C2738' }}>
-        <div className="overflow-auto" style={{ maxHeight: '480px' }}>
-          <table className="w-full border-collapse">
-            <thead className="sticky top-0 z-10">
-              <tr style={{ backgroundColor: '#111820' }}>
-                <th
-                  className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap"
-                  style={{ color: '#37475A', borderBottom: '1px solid #1C2738', width: '40px' }}
-                >
+      <div style={{ borderRadius: 10, border: '1px solid #E2E5EA', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
+        <div style={{ overflowX: 'auto', maxHeight: 460 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F9FAFB' }}>
+              <tr>
+                <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#9CA3AF', borderBottom: '1px solid #E2E5EA', width: 36, userSelect: 'none' }}>
                   #
                 </th>
                 {columns.map(col => (
-                  <th
-                    key={col}
-                    className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap"
-                    style={{ color: '#37475A', borderBottom: '1px solid #1C2738' }}
-                  >
+                  <th key={col} style={{ padding: '10px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#9CA3AF', borderBottom: '1px solid #E2E5EA', whiteSpace: 'nowrap' }}>
                     {col}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {pageData.map((row, idx) => {
-                const absIdx = startIdx + idx;
-                return (
-                  <tr
-                    key={idx}
-                    style={{ backgroundColor: '#0C1018', borderBottom: '1px solid #141E2A' }}
-                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#10192A')}
-                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#0C1018')}
-                  >
-                    <td
-                      className="px-3 py-2 text-[11px] select-none"
-                      style={{ color: '#253347', fontFamily: 'JetBrains Mono, monospace' }}
+              {pageData.map((row, i) => (
+                <tr
+                  key={i}
+                  style={{ borderBottom: '1px solid #F3F4F6', backgroundColor: '#FFFFFF', cursor: 'default' }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#FEF9F9')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+                >
+                  <td style={{ padding: '8px 12px', fontSize: 11, color: '#D1D5DB', fontFamily: 'JetBrains Mono, monospace', userSelect: 'none' }}>
+                    {start + i + 1}
+                  </td>
+                  {columns.map(col => (
+                    <td key={col}
+                      style={{ padding: '8px 12px', fontSize: 12, color: '#374151', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'nowrap', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      title={fmt(row[col])}
                     >
-                      {absIdx + 1}
+                      {fmt(row[col])}
                     </td>
-                    {columns.map(col => (
-                      <td
-                        key={col}
-                        className="px-3 py-2 text-[12px] whitespace-nowrap max-w-[280px] truncate"
-                        style={{ color: '#8A9BAC', fontFamily: 'JetBrains Mono, monospace' }}
-                        title={fmt(row[col])}
-                      >
-                        {fmt(row[col])}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
+                  ))}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
 
       {/* Footer info */}
-      <p className="text-[11px] mt-1.5" style={{ color: '#253347' }}>
-        Menampilkan {startIdx + 1}–{Math.min(startIdx + ROWS_PER_PAGE, data.length)} dari {data.length.toLocaleString()} baris
-        {totalPages > 1 && ` · Halaman ${currentPage}/${totalPages}`}
+      <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 8 }}>
+        Baris {start + 1}–{Math.min(start + ROWS_PER_PAGE, data.length)} dari {data.length.toLocaleString()}
+        {total > 1 && ` · Halaman ${page}/${total}`}
       </p>
     </motion.div>
   );

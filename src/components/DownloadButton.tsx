@@ -14,41 +14,31 @@ export function DownloadButton({ onClick, disabled, mode, rowCount }: DownloadBu
   const filename = `FilterSakti_${mode}_${date}.xlsx`;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.2 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.15 }}>
       <button
         onClick={onClick}
         disabled={disabled}
-        className="w-full h-11 rounded-lg flex items-center justify-center gap-2.5 text-[13px] font-semibold transition-all duration-150"
         style={{
-          backgroundColor: disabled ? '#0F1520' : '#1C3348',
-          color: disabled ? '#2A3F52' : '#7AACCA',
-          border: `1px solid ${disabled ? '#1A2738' : '#2A4A62'}`,
+          width: '100%', height: 44, borderRadius: 8,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          fontSize: 13, fontWeight: 600,
+          backgroundColor: disabled ? '#F9FAFB' : '#C0392B',
+          color: disabled ? '#D1D5DB' : '#FFFFFF',
+          border: `1px solid ${disabled ? '#E2E5EA' : '#C0392B'}`,
           cursor: disabled ? 'not-allowed' : 'pointer',
+          transition: 'all 0.15s',
         }}
-        onMouseEnter={e => {
-          if (!disabled) {
-            e.currentTarget.style.backgroundColor = '#213D58';
-            e.currentTarget.style.borderColor = '#3A6080';
-          }
-        }}
-        onMouseLeave={e => {
-          if (!disabled) {
-            e.currentTarget.style.backgroundColor = '#1C3348';
-            e.currentTarget.style.borderColor = '#2A4A62';
-          }
-        }}
+        onMouseEnter={e => { if (!disabled) e.currentTarget.style.backgroundColor = '#A93226'; }}
+        onMouseLeave={e => { if (!disabled) e.currentTarget.style.backgroundColor = '#C0392B'; }}
       >
-        <Download className="w-4 h-4" />
+        <Download style={{ width: 16, height: 16 }} />
         <span>Download Excel</span>
         {!disabled && rowCount !== undefined && (
-          <span
-            className="text-[11px] font-normal px-2 py-0.5 rounded"
-            style={{ backgroundColor: '#152637', color: '#5A8FA8' }}
-          >
+          <span style={{
+            fontSize: 11, fontWeight: 400,
+            padding: '2px 8px', borderRadius: 4,
+            backgroundColor: 'rgba(255,255,255,0.2)', color: '#FECACA',
+          }}>
             {rowCount.toLocaleString()} baris · {filename}
           </span>
         )}
