@@ -1,0 +1,200 @@
+import { useState, useCallback, useEffect, useRef } from 'react';
+import type { OperationMode, DataRow, ProcessingMetrics, AppStatus } from '@/types';
+import { processData, validateRequiredColumns } from '@/lib/dataProcessor';
+import { parseFile, generateExcel } from '@/lib/fileParser';
+
+export type { AppStatus };
+export type SheetStatus = 'connecting' | 'connected' | 'error';
+
+interface SheetInfo {
+  ids: string[];
+  checkColumn: string;
+  sheetName: string;
+  totalRows: number;
+}
+
+export function useAppState() {
+  const [mode, setMode] = useState<OperationMode>('WSA');
+  const [status, setStatus] = useState<AppStatus>('idle');
+  const [error, setError] = useState<string | null>(null);
+  const [sheetStatus, setSheetStatus] = useState<SheetStatus>('connecting');
+  const [sheetInfo, setSheetInfo] = useState<SheetInfo | null>(null);
+  const [sheetError, setSheetError] = useState<string | null>(null);
+  const [selectedMonths, setSelectedMonths] = useState<number[]>(() => {
+    const now = new Date();
+    const curr = now.getMonth() + 1;
+    const prev = curr > 1 ? curr - 1 : 12;
+    return [prev, curr];
+  });
+  const [mainFile, setMainFile] = useState<File | null>(null);
+  const [rawData, setRawData] = useState<DataRow[] | null>(null);
+  const [processedData, setProcessedData] = useState<DataRow[] | null>(null);
+  const [metrics, setMetrics] = useState<ProcessingMetrics>({
+    filtered: 0,
+    unique: 0,
+    checkColumn: '',
+  });
+  const [columns, setColumns] = useState<string[]>([]);
+
+  // Track latest fetch to avoid stale responses
+  const fetchAbortRef = useRef<AbortController | null>(null);
+
+  // Auto-fetch Google Sheets reference data whenever mode changes
+  const fetchSheetData = useCallback(async (targetMode: OperationMode) => {
+    // Abort any previous in-flight request
+    if (fetchAbortRef.current) {
+      fetchAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+
+    setSheetStatus('connecting');
+    setSheetInfo(null);
+    setSheetError(null);
+
+    try {
+      const res = await fetch(`/api/sheets?mode=${targetMode}`, {
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(body?.error || `HTTP ${res.status}`);
+      }
+
+      const data: SheetInfo = await res.json();
+      setSheetInfo(data);
+      setSheetStatus('connected');
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+      const msg = err instanceof Error ? err.message : 'Failed to connect';
+      setSheetError(msg);
+      setSheetStatus('error');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSheetData(mode);
+  }, [mode, fetchSheetData]);
+
+  const handleModeChange = useCallback((newMode: OperationMode) => {
+    setMode(newMode);
+    setStatus('idle');
+    setError(null);
+    setProcessedData(null);
+    setRawData(null);
+    setMainFile(null);
+    setMetrics({ filtered: 0, unique: 0, checkColumn: '' });
+    setColumns([]);
+  }, []);
+
+  const handleMainFileUpload = useCallback(async (file: File) => {
+    setMainFile(file);
+    setError(null);
+    setStatus('parsing');
+
+    try {
+      const result = await parseFile(file);
+      setRawData(result.data);
+      setStatus('idle');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to parse file');
+      setStatus('error');
+      setMainFile(null);
+    }
+  }, []);
+
+  const handleProcess = useCallback(async () => {
+    if (!rawData || !rawData.length) {
+      setError('Please upload a data file first');
+      setStatus('error');
+      return;
+    }
+
+    const missingCols = validateRequiredColumns(rawData, mode);
+    if (missingCols.length > 0) {
+      setError(`Missing required columns: ${missingCols.join(', ')}`);
+      setStatus('error');
+      return;
+    }
+
+    setStatus('processing');
+    setError(null);
+
+    await new Promise(resolve => setTimeout(resolve, 80));
+
+    try {
+      // Build reference data from Google Sheets IDs
+      let referenceData: DataRow[] | null = null;
+      if (sheetInfo && sheetInfo.ids.length > 0) {
+        const checkCol = sheetInfo.checkColumn;
+        referenceData = sheetInfo.ids.map(id => ({ [checkCol]: id }));
+      }
+
+      const result = processData(rawData, mode, selectedMonths, referenceData);
+
+      setProcessedData(result.unique);
+      setColumns(result.columns);
+      setMetrics({
+        filtered: result.filtered.length,
+        unique: result.unique.length,
+        checkColumn: result.checkColumn,
+      });
+      setStatus('complete');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Processing failed');
+      setStatus('error');
+    }
+  }, [rawData, mode, selectedMonths, sheetInfo]);
+
+  const handleDownload = useCallback(() => {
+    if (!processedData || !processedData.length) return;
+
+    const now = new Date();
+    const dateStr = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${now.getFullYear()}`;
+    const filename = `FilterSakti_${mode}_${dateStr}.xlsx`;
+
+    generateExcel(processedData, filename);
+  }, [processedData, mode]);
+
+  const toggleMonth = useCallback((month: number) => {
+    setSelectedMonths(prev =>
+      prev.includes(month)
+        ? prev.filter(m => m !== month)
+        : [...prev, month]
+    );
+  }, []);
+
+  const clearMainFile = useCallback(() => {
+    setMainFile(null);
+    setRawData(null);
+    setProcessedData(null);
+    setStatus('idle');
+    setError(null);
+  }, []);
+
+  const retrySheetFetch = useCallback(() => {
+    fetchSheetData(mode);
+  }, [mode, fetchSheetData]);
+
+  return {
+    mode,
+    status,
+    error,
+    sheetStatus,
+    sheetInfo,
+    sheetError,
+    selectedMonths,
+    mainFile,
+    processedData,
+    metrics,
+    columns,
+    handleModeChange,
+    handleMainFileUpload,
+    handleProcess,
+    handleDownload,
+    toggleMonth,
+    clearMainFile,
+    retrySheetFetch,
+  };
+}
