@@ -29,6 +29,7 @@ export function useAppState() {
   const [mainFile, setMainFile] = useState<File | null>(null);
   const [rawData, setRawData] = useState<DataRow[] | null>(null);
   const [processedData, setProcessedData] = useState<DataRow[] | null>(null);
+  const [rawProcessedData, setRawProcessedData] = useState<DataRow[] | null>(null);
   const [metrics, setMetrics] = useState<ProcessingMetrics>({
     filtered: 0,
     unique: 0,
@@ -82,6 +83,7 @@ export function useAppState() {
     setStatus('idle');
     setError(null);
     setProcessedData(null);
+    setRawProcessedData(null);
     setRawData(null);
     setMainFile(null);
     setMetrics({ filtered: 0, unique: 0, checkColumn: '' });
@@ -134,6 +136,7 @@ export function useAppState() {
       const result = processData(rawData, mode, selectedMonths, referenceData);
 
       setProcessedData(result.unique);
+      setRawProcessedData(result.uniqueRaw);
       setColumns(result.columns);
       setMetrics({
         filtered: result.filtered.length,
@@ -149,13 +152,17 @@ export function useAppState() {
 
   const handleDownload = useCallback(() => {
     if (!processedData || !processedData.length) return;
-
     const now = new Date();
     const dateStr = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${now.getFullYear()}`;
-    const filename = `FilterSakti_${mode}_${dateStr}.xlsx`;
-
-    generateExcel(processedData, filename);
+    generateExcel(processedData, `FilterSakti_${mode}_${dateStr}.xlsx`);
   }, [processedData, mode]);
+
+  const handleDownloadRaw = useCallback(() => {
+    if (!rawProcessedData || !rawProcessedData.length) return;
+    const now = new Date();
+    const dateStr = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${now.getFullYear()}`;
+    generateExcel(rawProcessedData, `FilterSakti_${mode}_AllKolom_${dateStr}.xlsx`);
+  }, [rawProcessedData, mode]);
 
   const toggleMonth = useCallback((month: number) => {
     setSelectedMonths(prev =>
@@ -169,6 +176,7 @@ export function useAppState() {
     setMainFile(null);
     setRawData(null);
     setProcessedData(null);
+    setRawProcessedData(null);
     setStatus('idle');
     setError(null);
   }, []);
@@ -187,12 +195,14 @@ export function useAppState() {
     selectedMonths,
     mainFile,
     processedData,
+    rawProcessedData,
     metrics,
     columns,
     handleModeChange,
     handleMainFileUpload,
     handleProcess,
     handleDownload,
+    handleDownloadRaw,
     toggleMonth,
     clearMainFile,
     retrySheetFetch,

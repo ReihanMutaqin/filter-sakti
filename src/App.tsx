@@ -20,7 +20,7 @@ export default function App() {
     selectedMonths, mainFile,
     processedData, metrics, columns,
     handleModeChange, handleMainFileUpload, handleProcess,
-    handleDownload, toggleMonth, clearMainFile, retrySheetFetch,
+    handleDownload, handleDownloadRaw, toggleMonth, clearMainFile, retrySheetFetch,
   } = useAppState();
 
   const showResults = status === 'complete' && processedData !== null;
@@ -61,7 +61,13 @@ export default function App() {
           <DataTable data={processedData || []} columns={columns} visible={showResults} />
 
           {/* Download */}
-          <DownloadButton onClick={handleDownload} disabled={!showResults} mode={mode} rowCount={showResults ? processedData!.length : undefined} />
+          <DownloadButton
+            onDownloadFormatted={handleDownload}
+            onDownloadRaw={handleDownloadRaw}
+            disabled={!showResults}
+            mode={mode}
+            rowCount={showResults ? processedData!.length : undefined}
+          />
 
           {/* Empty */}
           {showEmpty && (

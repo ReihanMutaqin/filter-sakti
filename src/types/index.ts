@@ -3,7 +3,8 @@ export type AppStatus = 'idle' | 'parsing' | 'processing' | 'complete' | 'error'
 
 export interface ProcessedData {
   filtered: DataRow[];
-  unique: DataRow[];
+  unique: DataRow[];      // kolom reordered (sesuai tabel)
+  uniqueRaw: DataRow[];   // semua kolom asli (tanpa format)
   checkColumn: string;
   columns: string[];
 }

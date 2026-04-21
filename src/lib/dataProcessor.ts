@@ -246,6 +246,7 @@ export function processData(
   return {
     filtered: df,
     unique: finalData,
+    uniqueRaw: sortedUnique,  // semua kolom, sebelum reorder
     checkColumn: checkCol,
     columns,
   };
