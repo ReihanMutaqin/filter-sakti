@@ -212,7 +212,7 @@ export function Sidebar({
 
       {/* Footer */}
       <div style={{ padding: '12px 16px', borderTop: '1px solid #F3F4F6' }}>
-        <p style={{ fontSize: 11, color: '#D1D5DB' }}>Filter Sakti · v2.1</p>
+        <p style={{ fontSize: 11, color: '#D1D5DB' }}>Filter Sakti · v2.1 · @Rei219</p>
       </div>
     </motion.aside>
   );
