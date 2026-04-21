@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
 import type { DataRow } from '@/types';
 
 interface DataTableProps {
@@ -13,78 +13,121 @@ const ROWS_PER_PAGE = 50;
 
 export function DataTable({ data, columns, visible }: DataTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    const header = columns.join('\t');
+    const rows = data
+      .map(row => columns.map(col => {
+        const val = row[col];
+        if (val === null || val === undefined) return '';
+        return String(val);
+      }).join('\t'))
+      .join('\n');
+    navigator.clipboard.writeText(`${header}\n${rows}`).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [data, columns]);
 
   if (!visible) return null;
 
   const totalPages = Math.ceil(data.length / ROWS_PER_PAGE);
   const startIdx = (currentPage - 1) * ROWS_PER_PAGE;
-  const paginatedData = data.slice(startIdx, startIdx + ROWS_PER_PAGE);
+  const pageData = data.slice(startIdx, startIdx + ROWS_PER_PAGE);
 
-  const formatCellValue = (val: unknown): string => {
+  const fmt = (val: unknown): string => {
     if (val === null || val === undefined) return '';
-    if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+    if (typeof val === 'boolean') return val ? 'Ya' : 'Tidak';
     return String(val);
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.3, ease: [0.4, 0, 0.2, 1] }}
+      transition={{ duration: 0.35, delay: 0.15 }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <h3 className="font-heading font-semibold text-base text-[#F0F4F8]">
-            Preview Data Unik
+      {/* Table Header Bar */}
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center gap-2.5">
+          <h3 className="text-[13px] font-semibold" style={{ color: '#8BBDD4' }}>
+            Data Unik
           </h3>
           <span
-            className="px-2 py-0.5 rounded-full text-[11px] font-medium"
-            style={{
-              backgroundColor: 'rgba(59, 130, 246, 0.12)',
-              color: '#3B82F6',
-            }}
+            className="text-[11px] px-2 py-0.5 rounded"
+            style={{ backgroundColor: '#1C2738', color: '#5A6B7C' }}
           >
             {data.length.toLocaleString()} baris
           </span>
         </div>
 
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="p-1.5 rounded-md border border-white/[0.08] text-[#8B9CB5] hover:text-[#F0F4F8] hover:border-white/[0.15] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="text-xs text-[#8B9CB5] min-w-[60px] text-center">
-              {currentPage} / {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="p-1.5 rounded-md border border-white/[0.08] text-[#8B9CB5] hover:text-[#F0F4F8] hover:border-white/[0.15] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Copy All Button */}
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all duration-150"
+            style={{
+              backgroundColor: copied ? '#0E1E16' : '#111820',
+              color: copied ? '#4A8F68' : '#5A6B7C',
+              border: `1px solid ${copied ? '#1E3328' : '#1C2738'}`,
+            }}
+            title="Salin semua data ke clipboard"
+          >
+            {copied
+              ? <><Check className="w-3.5 h-3.5" />Tersalin!</>
+              : <><Copy className="w-3.5 h-3.5" />Salin Semua</>
+            }
+          </button>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded transition-colors disabled:opacity-25"
+                style={{ color: '#5A6B7C', border: '1px solid #1C2738' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#7AACCA')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#5A6B7C')}
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-[11px] px-2" style={{ color: '#445566' }}>
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-1.5 rounded transition-colors disabled:opacity-25"
+                style={{ color: '#5A6B7C', border: '1px solid #1C2738' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#7AACCA')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#5A6B7C')}
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Table */}
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{ backgroundColor: '#0D1117', border: '1px solid #1C2537' }}
-      >
-        <div className="overflow-auto max-h-[500px] custom-scrollbar">
-          <table className="w-full">
+      <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #1C2738' }}>
+        <div className="overflow-auto" style={{ maxHeight: '480px' }}>
+          <table className="w-full border-collapse">
             <thead className="sticky top-0 z-10">
-              <tr style={{ backgroundColor: '#0D1117' }}>
+              <tr style={{ backgroundColor: '#111820' }}>
+                <th
+                  className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap"
+                  style={{ color: '#37475A', borderBottom: '1px solid #1C2738', width: '40px' }}
+                >
+                  #
+                </th>
                 {columns.map(col => (
                   <th
                     key={col}
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap border-b" style={{ color: '#475569', borderColor: '#1C2537' }}
+                    className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap"
+                    style={{ color: '#37475A', borderBottom: '1px solid #1C2738' }}
                   >
                     {col}
                   </th>
@@ -92,36 +135,44 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((row, idx) => (
-                <tr
-                  key={idx}
-                  className="transition-colors duration-150 border-b last:border-b-0"
-                  style={{
-                    backgroundColor: idx % 2 === 0 ? '#0D1117' : 'rgba(255,255,255,0.015)',
-                    borderColor: '#1C2537',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                      idx % 2 === 0 ? '#0D1117' : 'rgba(255,255,255,0.015)';
-                  }}
-                >
-                  {columns.map(col => (
+              {pageData.map((row, idx) => {
+                const absIdx = startIdx + idx;
+                return (
+                  <tr
+                    key={idx}
+                    style={{ backgroundColor: '#0C1018', borderBottom: '1px solid #141E2A' }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#10192A')}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#0C1018')}
+                  >
                     <td
-                      key={col}
-                      className="px-4 py-2.5 text-[12px] font-mono whitespace-nowrap max-w-[300px] truncate" style={{ color: '#CBD5E1' }}
+                      className="px-3 py-2 text-[11px] select-none"
+                      style={{ color: '#253347', fontFamily: 'JetBrains Mono, monospace' }}
                     >
-                      {formatCellValue(row[col])}
+                      {absIdx + 1}
                     </td>
-                  ))}
-                </tr>
-              ))}
+                    {columns.map(col => (
+                      <td
+                        key={col}
+                        className="px-3 py-2 text-[12px] whitespace-nowrap max-w-[280px] truncate"
+                        style={{ color: '#8A9BAC', fontFamily: 'JetBrains Mono, monospace' }}
+                        title={fmt(row[col])}
+                      >
+                        {fmt(row[col])}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Footer info */}
+      <p className="text-[11px] mt-1.5" style={{ color: '#253347' }}>
+        Menampilkan {startIdx + 1}–{Math.min(startIdx + ROWS_PER_PAGE, data.length)} dari {data.length.toLocaleString()} baris
+        {totalPages > 1 && ` · Halaman ${currentPage}/${totalPages}`}
+      </p>
     </motion.div>
   );
 }

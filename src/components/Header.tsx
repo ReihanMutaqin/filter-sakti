@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { RefreshCw, Wifi, WifiOff, Loader2 } from 'lucide-react';
+import { Loader2, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import type { OperationMode } from '@/types';
 import type { SheetStatus } from '@/hooks/useAppState';
 
@@ -20,56 +20,54 @@ const MODES: { key: OperationMode; label: string }[] = [
 export function Header({ mode, onModeChange, sheetStatus, sheetName, onRetry }: HeaderProps) {
   return (
     <motion.header
-      initial={{ opacity: 0, y: -8 }}
+      initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-      className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-5 border-b"
+      transition={{ duration: 0.3 }}
+      className="fixed top-0 left-0 right-0 z-50 h-13 flex items-center justify-between px-5"
       style={{
-        backgroundColor: 'rgba(13, 17, 28, 0.92)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        borderColor: '#1C2537',
-        boxShadow: '0 1px 0 rgba(0,0,0,0.4)',
+        height: '52px',
+        backgroundColor: 'rgba(12,16,24,0.95)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: '1px solid #1C2738',
       }}
     >
       {/* Brand */}
       <div className="flex items-center gap-2.5">
         <div
-          className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)' }}
+          className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: '#1C3348', border: '1px solid #2A4A62' }}
         >
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <path d="M2 4h10M2 7h7M2 10h5" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <rect x="1" y="2" width="10" height="1.5" rx="0.75" fill="#7AACCA"/>
+            <rect x="1" y="5.25" width="7" height="1.5" rx="0.75" fill="#7AACCA"/>
+            <rect x="1" y="8.5" width="5" height="1.5" rx="0.75" fill="#7AACCA"/>
           </svg>
         </div>
         <div className="flex items-baseline gap-1">
-          <span className="font-heading font-bold text-[15px] text-[#F1F5F9] tracking-tight">Filter</span>
-          <span className="font-heading font-bold text-[15px] tracking-tight" style={{ color: '#3B82F6' }}>Sakti</span>
+          <span className="font-heading font-bold text-[14px]" style={{ color: '#A8B8C5', letterSpacing: '-0.2px' }}>
+            Filter
+          </span>
+          <span className="font-heading font-bold text-[14px]" style={{ color: '#6A9AB5', letterSpacing: '-0.2px' }}>
+            Sakti
+          </span>
         </div>
       </div>
 
       {/* Mode Tabs */}
       <div
-        className="flex items-center p-[3px] gap-[3px] rounded-[9px]"
-        style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+        className="flex items-center p-[3px] rounded-[8px] gap-[2px]"
+        style={{ backgroundColor: '#111820', border: '1px solid #1C2738' }}
       >
         {MODES.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => onModeChange(key)}
-            className="relative px-4 py-1.5 rounded-[7px] text-[13px] font-medium transition-all duration-200 ease-out"
+            className="px-4 py-[5px] rounded-[6px] text-[12px] font-medium transition-all duration-150"
             style={{
-              background: mode === key
-                ? 'linear-gradient(135deg, #3B82F6, #2563EB)'
-                : 'transparent',
-              color: mode === key ? '#FFFFFF' : '#64748B',
-              boxShadow: mode === key ? '0 2px 8px rgba(59, 130, 246, 0.3)' : 'none',
-            }}
-            onMouseEnter={(e) => {
-              if (mode !== key) e.currentTarget.style.color = '#94A3B8';
-            }}
-            onMouseLeave={(e) => {
-              if (mode !== key) e.currentTarget.style.color = '#64748B';
+              backgroundColor: mode === key ? '#1C3348' : 'transparent',
+              color: mode === key ? '#8BBDD4' : '#445566',
+              border: mode === key ? '1px solid #2A4A62' : '1px solid transparent',
             }}
           >
             {label}
@@ -77,35 +75,35 @@ export function Header({ mode, onModeChange, sheetStatus, sheetName, onRetry }: 
         ))}
       </div>
 
-      {/* Sheet Connection Status */}
+      {/* Sheet Status */}
       <div className="flex items-center gap-2">
         {sheetStatus === 'connecting' && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
-            <Loader2 className="w-3 h-3 animate-spin" style={{ color: '#64748B' }} />
-            <span className="text-xs" style={{ color: '#64748B' }}>Menghubungkan...</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ backgroundColor: '#111820', border: '1px solid #1C2738' }}>
+            <Loader2 className="w-3 h-3 animate-spin-slow" style={{ color: '#3D6E8C' }} />
+            <span className="text-[12px]" style={{ color: '#445566' }}>Menghubungkan...</span>
           </div>
         )}
         {sheetStatus === 'connected' && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'rgba(16, 185, 96, 0.08)', border: '1px solid rgba(16, 185, 96, 0.15)' }}>
-            <Wifi className="w-3 h-3" style={{ color: '#10B981' }} />
-            <span className="text-xs font-medium" style={{ color: '#10B981' }}>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ backgroundColor: '#0E1E16', border: '1px solid #1E3328' }}>
+            <Wifi className="w-3 h-3" style={{ color: '#4A8F68' }} />
+            <span className="text-[12px] font-medium" style={{ color: '#5FA07A' }}>
               {sheetName ?? 'Terhubung'}
             </span>
           </div>
         )}
         {sheetStatus === 'error' && (
           <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.15)' }}>
-              <WifiOff className="w-3 h-3" style={{ color: '#EF4444' }} />
-              <span className="text-xs font-medium" style={{ color: '#EF4444' }}>Gagal koneksi</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ backgroundColor: '#1A0E0E', border: '1px solid #3A1F1F' }}>
+              <WifiOff className="w-3 h-3" style={{ color: '#8F4A4A' }} />
+              <span className="text-[12px]" style={{ color: '#A06060' }}>Gagal koneksi</span>
             </div>
             <button
               onClick={onRetry}
               className="p-1.5 rounded-md transition-colors"
-              style={{ color: '#64748B' }}
+              style={{ color: '#445566' }}
               title="Coba lagi"
-              onMouseEnter={(e) => e.currentTarget.style.color = '#94A3B8'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#64748B'}
+              onMouseEnter={e => (e.currentTarget.style.color = '#7AACCA')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#445566')}
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>

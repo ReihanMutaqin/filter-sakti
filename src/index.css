@@ -1,104 +1,80 @@
-@import '@fontsource/plus-jakarta-sans/400.css';
-@import '@fontsource/plus-jakarta-sans/500.css';
-@import '@fontsource/plus-jakarta-sans/600.css';
-@import '@fontsource/plus-jakarta-sans/700.css';
+/* ==============================================
+   FILTER SAKTI — Design System
+   Palette: calm slate-navy, muted steel-blue
+   ============================================== */
+
 @import '@fontsource/inter/400.css';
 @import '@fontsource/inter/500.css';
 @import '@fontsource/inter/600.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
 @import '@fontsource/jetbrains-mono/400.css';
-@import '@fontsource/jetbrains-mono/500.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ---- Design tokens ---- */
+:root {
+  --bg:        #0C1018;
+  --surface:   #111820;
+  --surface-2: #161E2A;
+  --border:    #1C2738;
+  --border-2:  #253347;
+
+  --text-1:    #BFC8D4;   /* primary text */
+  --text-2:    #5A6B7C;   /* secondary / labels */
+  --text-3:    #37475A;   /* placeholder / muted */
+
+  --accent:    #3D6E8C;   /* steel-blue, calm */
+  --accent-2:  #2E5470;   /* deeper for hover */
+  --accent-fg: #E8F0F6;   /* text on accent */
+
+  --success:   #2E6B4A;
+  --success-fg:#7DD3A8;
+  --error:     #6B2E2E;
+  --error-fg:  #F08080;
+}
+
 @layer base {
-  :root {
-    --background: 222 47% 5%;
-    --foreground: 213 30% 95%;
-    --card: 222 40% 7%;
-    --card-foreground: 213 30% 95%;
-    --popover: 222 40% 7%;
-    --popover-foreground: 213 30% 95%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 5%;
-    --secondary: 222 35% 12%;
-    --secondary-foreground: 213 30% 95%;
-    --muted: 222 35% 12%;
-    --muted-foreground: 215 20% 40%;
-    --accent: 217 91% 60%;
-    --accent-foreground: 222 47% 5%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 100% / 0.07;
-    --input: 0 0% 100% / 0.07;
-    --ring: 217 91% 60%;
-    --radius: 0.625rem;
-  }
-
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg);
+    color: var(--text-1);
+    font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-size: 14px;
+    line-height: 1.5;
   }
-
-  h1, h2, h3, h4, h5, h6 {
+  h1,h2,h3,h4,h5,h6 {
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #CDD6E0;
   }
-
   code, .font-mono {
     font-family: 'JetBrains Mono', monospace;
   }
+  * { box-sizing: border-box; }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-}
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #253347; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #2E4060; }
 
-/* ===== Custom Scrollbar ===== */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #2D3F55;
-  border-radius: 2px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #3D5575;
-}
-
-/* ===== Shake Animation (error) ===== */
+/* ---- Shake animation (error) ---- */
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-  20%, 40%, 60%, 80% { transform: translateX(4px); }
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-4px); }
+  40%,80% { transform: translateX( 4px); }
 }
+.animate-shake { animation: shake 0.35s ease-in-out; }
 
-.animate-shake {
-  animation: shake 0.4s ease-in-out;
-}
+/* ---- Spinner ---- */
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin-slow { animation: spin 0.9s linear infinite; }
 
-/* ===== Spinner ===== */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.animate-spin-slow {
-  animation: spin 0.85s linear infinite;
-}
-
-/* ===== Drag over state ===== */
+/* ---- Drag-over state ---- */
 .drag-over {
-  border-color: #3B82F6 !important;
-  background-color: rgba(59, 130, 246, 0.06) !important;
+  border-color: var(--accent) !important;
+  background-color: rgba(61,110,140,0.07) !important;
 }
