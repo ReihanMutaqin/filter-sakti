@@ -9,6 +9,7 @@ interface HeaderProps {
   sheetStatus: SheetStatus;
   sheetName?: string;
   onRetry: () => void;
+  nextRefreshIn?: number;
 }
 
 const MODES: { key: OperationMode; label: string }[] = [
@@ -32,7 +33,7 @@ const S = {
   },
 };
 
-export function Header({ mode, onModeChange, sheetStatus, sheetName, onRetry }: HeaderProps) {
+export function Header({ mode, onModeChange, sheetStatus, sheetName, onRetry, nextRefreshIn }: HeaderProps) {
   return (
     <motion.header
       initial={{ opacity: 0, y: -4 }}
@@ -102,9 +103,23 @@ export function Header({ mode, onModeChange, sheetStatus, sheetName, onRetry }: 
           </div>
         )}
         {sheetStatus === 'connected' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 6, backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0' }}>
-            <Wifi style={{ width: 12, height: 12, color: '#15803D' }} />
-            <span style={{ fontSize: 12, fontWeight: 500, color: '#15803D' }}>{sheetName ?? 'Terhubung'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 6, backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+              <Wifi style={{ width: 12, height: 12, color: '#15803D' }} />
+              <span style={{ fontSize: 12, fontWeight: 500, color: '#15803D' }}>{sheetName ?? 'Terhubung'}</span>
+            </div>
+            {nextRefreshIn !== undefined && (
+              <div title="Auto-refresh data Sheets" style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                padding: '5px 10px', borderRadius: 6,
+                backgroundColor: '#F9FAFB', border: '1px solid #E2E5EA',
+              }}>
+                <RefreshCw style={{ width: 11, height: 11, color: '#9CA3AF' }} />
+                <span style={{ fontSize: 11, color: '#9CA3AF', fontVariantNumeric: 'tabular-nums' }}>
+                  {nextRefreshIn}s
+                </span>
+              </div>
+            )}
           </div>
         )}
         {sheetStatus === 'error' && (

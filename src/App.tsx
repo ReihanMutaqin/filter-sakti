@@ -19,6 +19,7 @@ export default function App() {
     sheetStatus, sheetInfo,
     selectedMonths, mainFile,
     processedData, metrics, columns,
+    nextRefreshIn,
     handleModeChange, handleMainFileUpload, handleProcess,
     handleDownload, handleDownloadRaw, toggleMonth, clearMainFile, retrySheetFetch,
   } = useAppState();
@@ -28,7 +29,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F4F5F7' }}>
-      <Header mode={mode} onModeChange={handleModeChange} sheetStatus={sheetStatus} sheetName={sheetInfo?.sheetName} onRetry={retrySheetFetch} />
+      <Header mode={mode} onModeChange={handleModeChange} sheetStatus={sheetStatus} sheetName={sheetInfo?.sheetName} onRetry={retrySheetFetch} nextRefreshIn={nextRefreshIn} />
 
       <Sidebar
         mode={mode} status={status} error={error}

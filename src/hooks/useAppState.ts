@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import type { OperationMode, DataRow, ProcessingMetrics, AppStatus } from '@/types';
 import { processData, validateRequiredColumns } from '@/lib/dataProcessor';
 import { parseFile, generateExcel } from '@/lib/fileParser';
@@ -37,11 +37,18 @@ export function useAppState() {
   });
   const [columns, setColumns] = useState<string[]>([]);
 
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [nextRefreshIn, setNextRefreshIn] = useState<number>(60);
+
   // Track latest fetch to avoid stale responses
   const fetchAbortRef = useRef<AbortController | null>(null);
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const REFRESH_INTERVAL_MS = 60_000; // 1 minute
 
   // Auto-fetch Google Sheets reference data whenever mode changes
-  const fetchSheetData = useCallback(async (targetMode: OperationMode) => {
+  const fetchSheetData = useCallback(async (targetMode: OperationMode, silent = false) => {
     // Abort any previous in-flight request
     if (fetchAbortRef.current) {
       fetchAbortRef.current.abort();
@@ -49,9 +56,11 @@ export function useAppState() {
     const controller = new AbortController();
     fetchAbortRef.current = controller;
 
-    setSheetStatus('connecting');
-    setSheetInfo(null);
-    setSheetError(null);
+    if (!silent) {
+      setSheetStatus('connecting');
+      setSheetInfo(null);
+      setSheetError(null);
+    }
 
     try {
       const res = await fetch(`/api/sheets?mode=${targetMode}`, {
@@ -66,6 +75,7 @@ export function useAppState() {
       const data: SheetInfo = await res.json();
       setSheetInfo(data);
       setSheetStatus('connected');
+      setLastRefreshed(new Date());
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') return;
       const msg = err instanceof Error ? err.message : 'Failed to connect';
@@ -74,8 +84,30 @@ export function useAppState() {
     }
   }, []);
 
+  // Initial fetch + auto-refresh every 1 minute
   useEffect(() => {
     fetchSheetData(mode);
+    setNextRefreshIn(60);
+
+    // Clear any existing intervals
+    if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+
+    // Auto-refresh every 60 seconds (silent = keep existing data visible)
+    refreshIntervalRef.current = setInterval(() => {
+      fetchSheetData(mode, true);
+      setNextRefreshIn(60);
+    }, REFRESH_INTERVAL_MS);
+
+    // Countdown ticker every second
+    countdownIntervalRef.current = setInterval(() => {
+      setNextRefreshIn(prev => (prev > 1 ? prev - 1 : 60));
+    }, 1000);
+
+    return () => {
+      if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    };
   }, [mode, fetchSheetData]);
 
   const handleModeChange = useCallback((newMode: OperationMode) => {
@@ -185,7 +217,16 @@ export function useAppState() {
 
   const retrySheetFetch = useCallback(() => {
     fetchSheetData(mode);
+    setNextRefreshIn(60);
+    // Reset countdown
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    countdownIntervalRef.current = setInterval(() => {
+      setNextRefreshIn(prev => (prev > 1 ? prev - 1 : 60));
+    }, 1000);
   }, [mode, fetchSheetData]);
+
+  // Memoize to avoid re-renders on every countdown tick for consumers that don't need it
+  const sheetMeta = useMemo(() => ({ lastRefreshed, nextRefreshIn }), [lastRefreshed, nextRefreshIn]);
 
   return {
     mode,
@@ -200,6 +241,8 @@ export function useAppState() {
     rawProcessedData,
     metrics,
     columns,
+    lastRefreshed: sheetMeta.lastRefreshed,
+    nextRefreshIn: sheetMeta.nextRefreshIn,
     handleModeChange,
     handleMainFileUpload,
     handleProcess,
