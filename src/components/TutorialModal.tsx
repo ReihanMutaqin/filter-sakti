@@ -78,10 +78,12 @@ export function TutorialModal({ open, onClose }: TutorialModalProps) {
             transition={{ duration: 0.22, ease: 'easeOut' }}
             style={{
               position: 'fixed',
-              top: '50%', left: '50%',
+              top: '50%',
+              left: 'calc(50% + 128px)',
               transform: 'translate(-50%, -50%)',
               zIndex: 201,
-              width: 'min(680px, 95vw)',
+              width: 'min(680px, calc(100vw - 280px))',
+              maxHeight: '90vh',
               backgroundColor: '#FFFFFF',
               borderRadius: 16,
               boxShadow: '0 24px 64px rgba(0,0,0,0.18)',
@@ -158,7 +160,7 @@ export function TutorialModal({ open, onClose }: TutorialModalProps) {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -12 }}
                 transition={{ duration: 0.18 }}
-                style={{ padding: '14px 20px' }}
+                style={{ padding: '14px 20px', overflowY: 'auto' }}
               >
                 {/* GIF frame */}
                 <div style={{
