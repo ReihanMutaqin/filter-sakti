@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, BookOpen, GripHorizontal } from 'lucide-react';
 
 import gif1 from './gif/1.gif';
 import gif2 from './gif/2.gif';
@@ -34,6 +34,8 @@ interface TutorialModalProps {
 
 export function TutorialModal({ open, onClose }: TutorialModalProps) {
   const [step, setStep] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const constraintsRef = useRef(null);
 
   // Reset ke step 1 setiap buka modal
   useEffect(() => {
@@ -53,86 +55,102 @@ export function TutorialModal({ open, onClose }: TutorialModalProps) {
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={onClose}
+          {/* Constraint area (full viewport) */}
+          <div
+            ref={constraintsRef}
             style={{
               position: 'fixed', inset: 0,
-              backgroundColor: 'rgba(0,0,0,0.45)',
-              backdropFilter: 'blur(3px)',
+              pointerEvents: 'none',
               zIndex: 200,
             }}
           />
 
-          {/* Modal */}
+          {/* Draggable Modal — no backdrop, starts top-left of content area */}
           <motion.div
             key="modal"
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
+            drag
+            dragMomentum={false}
+            dragElastic={0}
+            dragConstraints={constraintsRef}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={() => setIsDragging(false)}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             style={{
               position: 'fixed',
-              top: '50%',
-              left: 'calc(50% + 128px)',
-              transform: 'translate(-50%, -50%)',
+              /* start: kiri atas area konten (setelah sidebar 256px) */
+              top: 72,
+              left: 272,
               zIndex: 201,
-              width: 'min(680px, calc(100vw - 280px))',
-              maxHeight: '90vh',
+              width: 'min(600px, calc(100vw - 290px))',
+              maxHeight: 'calc(100vh - 90px)',
               backgroundColor: '#FFFFFF',
-              borderRadius: 16,
-              boxShadow: '0 24px 64px rgba(0,0,0,0.18)',
-              overflow: 'hidden',
+              borderRadius: 14,
+              boxShadow: isDragging
+                ? '0 32px 72px rgba(0,0,0,0.22)'
+                : '0 8px 32px rgba(0,0,0,0.14)',
+              border: '1px solid #E2E5EA',
               display: 'flex',
               flexDirection: 'column',
+              overflow: 'hidden',
+              cursor: isDragging ? 'grabbing' : 'default',
+              userSelect: 'none',
+              transition: 'box-shadow 0.15s',
             }}
           >
-            {/* Header modal */}
-            <div style={{
-              padding: '16px 20px',
-              borderBottom: '1px solid #F3F4F6',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
+            {/* ── Drag Handle / Header ── */}
+            <div
+              style={{
+                padding: '12px 16px',
+                borderBottom: '1px solid #F3F4F6',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                cursor: isDragging ? 'grabbing' : 'grab',
+                backgroundColor: '#FAFAFA',
+                flexShrink: 0,
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {/* grip icon */}
+                <GripHorizontal style={{ width: 14, height: 14, color: '#D1D5DB', flexShrink: 0 }} />
                 <div style={{
-                  width: 30, height: 30, borderRadius: 8,
-                  backgroundColor: '#FEF2F2',
-                  border: '1px solid #FECACA',
+                  width: 26, height: 26, borderRadius: 7,
+                  backgroundColor: '#FEF2F2', border: '1px solid #FECACA',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <BookOpen style={{ width: 14, height: 14, color: '#C0392B' }} />
+                  <BookOpen style={{ width: 12, height: 12, color: '#C0392B' }} />
                 </div>
                 <div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Tutorial MODOROSO</p>
-                  <p style={{ fontSize: 11, color: '#9CA3AF' }}>Cara mengambil data MO/DO</p>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: '#111827' }}>Tutorial MODOROSO</p>
+                  <p style={{ fontSize: 10, color: '#9CA3AF' }}>Cara mengambil data MO/DO</p>
                 </div>
               </div>
               <button
                 onClick={onClose}
+                onPointerDown={e => e.stopPropagation()}
                 style={{
-                  padding: 6, borderRadius: 6, border: 'none',
+                  padding: 5, borderRadius: 6, border: 'none',
                   backgroundColor: 'transparent', cursor: 'pointer', color: '#9CA3AF',
                   display: 'flex', alignItems: 'center',
                 }}
               >
-                <X style={{ width: 16, height: 16 }} />
+                <X style={{ width: 14, height: 14 }} />
               </button>
             </div>
 
-            {/* Step indicator */}
-            <div style={{ padding: '12px 20px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* ── Step tabs ── */}
+            <div
+              style={{ padding: '10px 16px 0', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+              onPointerDown={e => e.stopPropagation()}
+            >
               {STEPS.map((s, i) => (
                 <button
                   key={i}
                   onClick={() => setStep(i)}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '5px 12px', borderRadius: 20,
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    padding: '4px 10px', borderRadius: 20,
                     fontSize: 11, fontWeight: 600,
                     border: `1px solid ${i === step ? '#FECACA' : '#E2E5EA'}`,
                     backgroundColor: i === step ? '#FEF2F2' : '#F9FAFB',
@@ -141,81 +159,78 @@ export function TutorialModal({ open, onClose }: TutorialModalProps) {
                   }}
                 >
                   <span style={{
-                    width: 16, height: 16, borderRadius: '50%',
+                    width: 15, height: 15, borderRadius: '50%',
                     backgroundColor: i === step ? '#C0392B' : '#E2E5EA',
                     color: i === step ? '#fff' : '#9CA3AF',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 9, fontWeight: 700, flexShrink: 0,
+                    fontSize: 8, fontWeight: 700, flexShrink: 0,
                   }}>{s.step}</span>
                   {s.title}
                 </button>
               ))}
             </div>
 
-            {/* GIF area */}
+            {/* ── GIF + Desc (scrollable) ── */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
-                initial={{ opacity: 0, x: 12 }}
+                initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.18 }}
-                style={{ padding: '14px 20px', overflowY: 'auto' }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.16 }}
+                onPointerDown={e => e.stopPropagation()}
+                style={{ padding: '12px 16px', overflowY: 'auto', flex: 1 }}
               >
-                {/* GIF frame */}
+                {/* GIF */}
                 <div style={{
-                  borderRadius: 10, overflow: 'hidden',
+                  borderRadius: 8, overflow: 'hidden',
                   border: '1px solid #E2E5EA',
                   backgroundColor: '#F9FAFB',
                   aspectRatio: '16/9',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   position: 'relative',
                 }}>
                   <img
                     src={current.gif}
                     alt={`Step ${current.step}: ${current.title}`}
-                    style={{
-                      width: '100%', height: '100%',
-                      objectFit: 'contain',
-                      display: 'block',
-                    }}
+                    draggable={false}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
                   />
-                  {/* Step badge */}
                   <div style={{
-                    position: 'absolute', top: 10, left: 10,
-                    padding: '3px 10px', borderRadius: 20,
+                    position: 'absolute', top: 8, left: 8,
+                    padding: '2px 9px', borderRadius: 20,
                     backgroundColor: 'rgba(192,57,43,0.85)',
-                    fontSize: 11, fontWeight: 700, color: '#fff',
+                    fontSize: 10, fontWeight: 700, color: '#fff',
                     backdropFilter: 'blur(4px)',
                   }}>
                     Step {current.step} / {STEPS.length}
                   </div>
                 </div>
 
-                {/* Description */}
-                <div style={{ marginTop: 12 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 4 }}>
-                    {current.title}
-                  </p>
-                  <p style={{ fontSize: 12, color: '#6B7280', lineHeight: 1.6 }}>
-                    {current.desc}
-                  </p>
+                {/* Desc */}
+                <div style={{ marginTop: 10 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 3 }}>{current.title}</p>
+                  <p style={{ fontSize: 11, color: '#6B7280', lineHeight: 1.6 }}>{current.desc}</p>
                 </div>
               </motion.div>
             </AnimatePresence>
 
-            {/* Footer nav */}
-            <div style={{
-              padding: '12px 20px',
-              borderTop: '1px solid #F3F4F6',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
+            {/* ── Footer nav ── */}
+            <div
+              onPointerDown={e => e.stopPropagation()}
+              style={{
+                padding: '10px 16px',
+                borderTop: '1px solid #F3F4F6',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                flexShrink: 0,
+                backgroundColor: '#FAFAFA',
+              }}
+            >
               <button
                 onClick={() => setStep(s => Math.max(0, s - 1))}
                 disabled={step === 0}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                  display: 'flex', alignItems: 'center', gap: 3,
+                  padding: '6px 12px', borderRadius: 7, fontSize: 11, fontWeight: 600,
                   border: '1px solid #E2E5EA',
                   backgroundColor: step === 0 ? '#F9FAFB' : '#FFFFFF',
                   color: step === 0 ? '#D1D5DB' : '#374151',
@@ -223,21 +238,20 @@ export function TutorialModal({ open, onClose }: TutorialModalProps) {
                   transition: 'all 0.15s',
                 }}
               >
-                <ChevronLeft style={{ width: 14, height: 14 }} /> Sebelumnya
+                <ChevronLeft style={{ width: 13, height: 13 }} /> Sebelumnya
               </button>
 
               {/* Dots */}
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 5 }}>
                 {STEPS.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setStep(i)}
                     style={{
-                      width: i === step ? 20 : 6, height: 6, borderRadius: 3,
-                      border: 'none',
+                      width: i === step ? 18 : 6, height: 6, borderRadius: 3,
+                      border: 'none', padding: 0,
                       backgroundColor: i === step ? '#C0392B' : '#E2E5EA',
                       cursor: 'pointer', transition: 'all 0.2s',
-                      padding: 0,
                     }}
                   />
                 ))}
@@ -247,8 +261,8 @@ export function TutorialModal({ open, onClose }: TutorialModalProps) {
                 <button
                   onClick={() => setStep(s => Math.min(STEPS.length - 1, s + 1))}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 4,
-                    padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    display: 'flex', alignItems: 'center', gap: 3,
+                    padding: '6px 12px', borderRadius: 7, fontSize: 11, fontWeight: 600,
                     border: '1px solid #C0392B',
                     backgroundColor: '#C0392B', color: '#FFFFFF',
                     cursor: 'pointer', transition: 'all 0.15s',
@@ -256,13 +270,13 @@ export function TutorialModal({ open, onClose }: TutorialModalProps) {
                   onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#A93226'; }}
                   onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#C0392B'; }}
                 >
-                  Selanjutnya <ChevronRight style={{ width: 14, height: 14 }} />
+                  Selanjutnya <ChevronRight style={{ width: 13, height: 13 }} />
                 </button>
               ) : (
                 <button
                   onClick={onClose}
                   style={{
-                    padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    padding: '6px 12px', borderRadius: 7, fontSize: 11, fontWeight: 600,
                     border: '1px solid #C0392B',
                     backgroundColor: '#C0392B', color: '#FFFFFF',
                     cursor: 'pointer', transition: 'all 0.15s',
