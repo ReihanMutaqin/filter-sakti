@@ -9,20 +9,20 @@ import gif3 from './gif/3.gif';
 const STEPS = [
   {
     step: 1,
-    title: 'Siapkan File Data',
-    desc: 'Pastikan file Excel/CSV kamu berisi kolom INET dan SC yang valid. File harus berformat .xlsx, .xls, atau .csv.',
+    title: 'Buka BIMA',
+    desc: 'Pastikan Pastikan Tanggal nya awal bulan dan H+1',
     gif: gif1,
   },
   {
     step: 2,
-    title: 'Upload & Pilih Bulan',
-    desc: 'Klik area upload di sidebar atau drag & drop file data kamu. Pilih bulan yang ingin difilter, lalu klik tombol "Proses Data".',
+    title: 'Klik Show All Filter',
+    desc: 'Masukian STO nya ke workzone pake , misalkan KBY,JAG dan seterusnya.',
     gif: gif2,
   },
   {
     step: 3,
-    title: 'Download Hasil',
-    desc: 'Setelah data diproses, kamu bisa download hasil dalam format terformat atau raw. Data sudah otomatis deduplikasi dengan Google Sheets.',
+    title: 'Klik Show Lalu Dowload',
+    desc: 'Setelah data diproses, kamu bisa download hasil dalam format terformat atau raw. nanti  data di masukan di web ini.',
     gif: gif3,
   },
 ];
