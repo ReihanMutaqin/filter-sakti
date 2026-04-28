@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileSpreadsheet } from 'lucide-react';
 import { Header } from '@/components/Header';
@@ -5,6 +6,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { MetricsCards } from '@/components/MetricsCards';
 import { DataTable } from '@/components/DataTable';
 import { DownloadButton } from '@/components/DownloadButton';
+import { TutorialModal } from '@/components/TutorialModal';
 import { useAppState } from '@/hooks/useAppState';
 
 const MODE_DESC: Record<string, string> = {
@@ -24,6 +26,8 @@ export default function App() {
     handleDownload, handleDownloadRaw, toggleMonth, clearMainFile, retrySheetFetch,
   } = useAppState();
 
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+
   const showResults = status === 'complete' && processedData !== null;
   const showEmpty   = !mainFile && status === 'idle';
 
@@ -37,6 +41,7 @@ export default function App() {
         selectedMonths={selectedMonths} mainFile={mainFile}
         onMainFileUpload={handleMainFileUpload} onProcess={handleProcess}
         onToggleMonth={toggleMonth} onClearMainFile={clearMainFile}
+        onOpenTutorial={() => setTutorialOpen(true)}
       />
 
       <motion.main
@@ -102,6 +107,8 @@ export default function App() {
           )}
         </div>
       </motion.main>
+
+      <TutorialModal open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
     </div>
   );
 }

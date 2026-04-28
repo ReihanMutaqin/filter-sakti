@@ -1,6 +1,6 @@
 import { useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Check, AlertCircle, Loader2, X, Database } from 'lucide-react';
+import { Upload, Check, AlertCircle, Loader2, X, Database, BookOpen } from 'lucide-react';
 import type { OperationMode, AppStatus } from '@/types';
 import { MONTH_NAMES } from '@/types';
 import type { SheetStatus } from '@/hooks/useAppState';
@@ -17,12 +17,13 @@ interface SidebarProps {
   onProcess: () => void;
   onToggleMonth: (month: number) => void;
   onClearMainFile: () => void;
+  onOpenTutorial?: () => void;
 }
 
 export function Sidebar({
   mode, status, error, sheetStatus, sheetTotalRows,
   selectedMonths, mainFile, onMainFileUpload,
-  onProcess, onToggleMonth, onClearMainFile,
+  onProcess, onToggleMonth, onClearMainFile, onOpenTutorial,
 }: SidebarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -211,7 +212,27 @@ export function Sidebar({
       </div>
 
       {/* Footer */}
-      <div style={{ padding: '12px 16px', borderTop: '1px solid #F3F4F6' }}>
+      <div style={{ padding: '12px 16px', borderTop: '1px solid #F3F4F6', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {mode === 'MODOROSO' && (
+          <button
+            onClick={onOpenTutorial}
+            style={{
+              width: '100%', height: 34, borderRadius: 8,
+              fontSize: 12, fontWeight: 600,
+              border: '1px solid #FECACA',
+              backgroundColor: '#FEF2F2',
+              color: '#C0392B',
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#FEE2E2'; }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#FEF2F2'; }}
+          >
+            <BookOpen style={{ width: 13, height: 13 }} />
+            Cara Ambil Data
+          </button>
+        )}
         <p style={{ fontSize: 11, color: '#D1D5DB' }}>Filter Sakti · v2.1 · @Rei219</p>
       </div>
     </motion.aside>
