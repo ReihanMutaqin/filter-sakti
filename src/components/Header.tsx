@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Loader2, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import type { OperationMode } from '@/types';
 import type { SheetStatus } from '@/hooks/useAppState';
+import { useOnlineVisitors } from '@/hooks/useOnlineVisitors';
 
 interface HeaderProps {
   mode: OperationMode;
@@ -34,6 +35,7 @@ const S = {
 };
 
 export function Header({ mode, onModeChange, sheetStatus, sheetName, onRetry, nextRefreshIn }: HeaderProps) {
+  const onlineCount = useOnlineVisitors();
   return (
     <motion.header
       initial={{ opacity: 0, y: -4 }}
@@ -120,6 +122,41 @@ export function Header({ mode, onModeChange, sheetStatus, sheetName, onRetry, ne
                 </span>
               </div>
             )}
+
+            {/* Online Visitor Indicator */}
+            <div
+              title={`${onlineCount} pengguna sedang online`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '5px 10px', borderRadius: 6,
+                backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0',
+                cursor: 'default',
+              }}
+            >
+              {/* Pulsing dot */}
+              <div style={{ position: 'relative', width: 8, height: 8 }}>
+                <span style={{
+                  position: 'absolute', inset: 0,
+                  borderRadius: '50%',
+                  backgroundColor: '#22C55E',
+                  opacity: 0.4,
+                  animation: 'visitorPulse 1.8s ease-in-out infinite',
+                }} />
+                <span style={{
+                  position: 'absolute', inset: 1,
+                  borderRadius: '50%',
+                  backgroundColor: '#16A34A',
+                }} />
+              </div>
+              <span style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: '#15803D',
+                fontVariantNumeric: 'tabular-nums',
+              }}>
+                {onlineCount} online
+              </span>
+            </div>
           </div>
         )}
         {sheetStatus === 'error' && (
