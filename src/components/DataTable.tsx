@@ -18,6 +18,7 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
   // ── Developer-only checkbox mode (Ctrl+0) ──────────────────────────────────
   const [devMode, setDevMode] = useState(false);
   const [checkedRows, setCheckedRows] = useState<Set<number>>(new Set());
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   // Listen for Ctrl+0 to toggle dev mode
   useEffect(() => {
@@ -28,6 +29,7 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
           if (prev) {
             // turning off → clear selections
             setCheckedRows(new Set());
+            setSelectedCategory('');
           }
           return !prev;
         });
@@ -36,6 +38,18 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const uniqueStatuses = useMemo(() => {
+    if (!devMode || !columns.includes('Status')) return [];
+    const cats = new Set<string>();
+    data.forEach(row => {
+      const val = row['Status'];
+      if (val !== null && val !== undefined && val !== '') {
+        cats.add(String(val).trim());
+      }
+    });
+    return Array.from(cats).sort();
+  }, [data, devMode, columns]);
 
   const toggleRow = useCallback((globalIdx: number) => {
     setCheckedRows(prev => {
@@ -57,11 +71,13 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
 
   // ── Copy logic ─────────────────────────────────────────────────────────────
   const handleCopy = useCallback(() => {
-    // In dev mode with selections → copy only checked rows
-    const targetData =
-      devMode && checkedRows.size > 0
-        ? data.filter((_, i) => checkedRows.has(i))
-        : data;
+    // In dev mode with selections/category → copy specific rows
+    const targetData = (() => {
+      if (!devMode) return data;
+      if (checkedRows.size > 0) return data.filter((_, i) => checkedRows.has(i));
+      if (selectedCategory) return data.filter(row => String(row['Status']).trim() === selectedCategory);
+      return data;
+    })();
 
     const text = targetData
       .map(row =>
@@ -77,7 +93,7 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
-  }, [data, columns, devMode, checkedRows]);
+  }, [data, columns, devMode, checkedRows, selectedCategory]);
 
   if (!visible) return null;
 
@@ -139,6 +155,27 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {/* Category Dropdown (Dev Mode) */}
+          {devMode && uniqueStatuses.length > 0 && (
+            <select
+              value={selectedCategory}
+              onChange={e => {
+                setSelectedCategory(e.target.value);
+                setCheckedRows(new Set()); // clear checked rows when selecting category
+              }}
+              style={{
+                padding: '4px 8px', borderRadius: 6, fontSize: 12, fontWeight: 500,
+                border: '1px solid #E2E5EA', backgroundColor: '#F9FAFB',
+                color: '#374151', cursor: 'pointer', outline: 'none'
+              }}
+            >
+              <option value="">Semua Status</option>
+              {uniqueStatuses.map(st => (
+                <option key={st} value={st}>{st}</option>
+              ))}
+            </select>
+          )}
+
           {/* Copy button */}
           <button
             onClick={handleCopy}
@@ -155,7 +192,9 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
               ? <><Check style={{ width: 13, height: 13 }} />Tersalin!</>
               : devMode && checkedRows.size > 0
                 ? <><Copy style={{ width: 13, height: 13 }} />Salin {checkedRows.size} baris</>
-                : <><Copy style={{ width: 13, height: 13 }} />Salin Data</>
+                : devMode && selectedCategory
+                  ? <><Copy style={{ width: 13, height: 13 }} />Salin Kategori ({data.filter(r => String(r['Status']).trim() === selectedCategory).length})</>
+                  : <><Copy style={{ width: 13, height: 13 }} />Salin Data</>
             }
           </button>
 
