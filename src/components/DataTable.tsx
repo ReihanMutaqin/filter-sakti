@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Copy, Check, CheckSquare } from 'lucide-react';
 import type { DataRow } from '@/types';
@@ -170,7 +170,7 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
               }}
             >
               <option value="">Semua Status</option>
-              {uniqueStatuses.map(st => (
+              {uniqueStatuses.map((st: string) => (
                 <option key={st} value={st}>{st}</option>
               ))}
             </select>
