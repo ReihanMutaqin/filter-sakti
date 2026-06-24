@@ -19,6 +19,7 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
   const [devMode, setDevMode] = useState(false);
   const [checkedRows, setCheckedRows] = useState<Set<number>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [excludeC00, setExcludeC00] = useState(false);
 
   // Listen for Ctrl+0 to toggle dev mode
   useEffect(() => {
@@ -30,6 +31,7 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
             // turning off → clear selections
             setCheckedRows(new Set());
             setSelectedCategory('');
+            setExcludeC00(false);
           }
           return !prev;
         });
@@ -70,16 +72,26 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
   }, [data.length, checkedRows.size]);
 
   // ── Copy logic ─────────────────────────────────────────────────────────────
-  const handleCopy = useCallback(() => {
-    // In dev mode with selections/category → copy specific rows
-    const targetData = (() => {
-      if (!devMode) return data;
-      if (checkedRows.size > 0) return data.filter((_, i) => checkedRows.has(i));
-      if (selectedCategory) return data.filter(row => String(row['Status']).trim() === selectedCategory);
-      return data;
-    })();
+  const targetDataForCopy = useMemo(() => {
+    if (!devMode) return data;
+    let base = data;
+    if (checkedRows.size > 0) {
+      base = data.filter((_, i) => checkedRows.has(i));
+    } else if (selectedCategory) {
+      base = data.filter(row => String(row['Status']).trim() === selectedCategory);
+    }
+    
+    if (excludeC00) {
+      base = base.filter(row => {
+        const sc = String(row['SC Order No/Track ID/CSRM No'] || '').trim().toUpperCase();
+        return !sc.startsWith('C00');
+      });
+    }
+    return base;
+  }, [data, devMode, checkedRows, selectedCategory, excludeC00]);
 
-    const text = targetData
+  const handleCopy = useCallback(() => {
+    const text = targetDataForCopy
       .map(row =>
         columns.map(col => {
           const v = row[col];
@@ -93,7 +105,7 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
-  }, [data, columns, devMode, checkedRows, selectedCategory]);
+  }, [targetDataForCopy, columns]);
 
   if (!visible) return null;
 
@@ -176,6 +188,23 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
             </select>
           )}
 
+          {/* Exclude C00 Checkbox (Dev Mode) */}
+          {devMode && columns.includes('SC Order No/Track ID/CSRM No') && (
+            <label style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              fontSize: 12, fontWeight: 500, color: '#374151',
+              cursor: 'pointer', userSelect: 'none'
+            }}>
+              <input
+                type="checkbox"
+                checked={excludeC00}
+                onChange={e => setExcludeC00(e.target.checked)}
+                style={{ width: 13, height: 13, cursor: 'pointer', accentColor: '#2563EB' }}
+              />
+              Exclude C00
+            </label>
+          )}
+
           {/* Copy button */}
           <button
             onClick={handleCopy}
@@ -190,11 +219,9 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
           >
             {copied
               ? <><Check style={{ width: 13, height: 13 }} />Tersalin!</>
-              : devMode && checkedRows.size > 0
-                ? <><Copy style={{ width: 13, height: 13 }} />Salin {checkedRows.size} baris</>
-                : devMode && selectedCategory
-                  ? <><Copy style={{ width: 13, height: 13 }} />Salin Kategori ({data.filter(r => String(r['Status']).trim() === selectedCategory).length})</>
-                  : <><Copy style={{ width: 13, height: 13 }} />Salin Data</>
+              : devMode
+                ? <><Copy style={{ width: 13, height: 13 }} />Salin {targetDataForCopy.length} baris</>
+                : <><Copy style={{ width: 13, height: 13 }} />Salin Data</>
             }
           </button>
 
