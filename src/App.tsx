@@ -64,7 +64,7 @@ export default function App() {
           <MetricsCards metrics={metrics} visible={showResults} />
 
           {/* Table */}
-          <DataTable data={processedData || []} columns={columns} visible={showResults} />
+          <DataTable data={processedData || []} columns={columns} visible={showResults} mode={mode} />
 
           {/* Download */}
           <DownloadButton

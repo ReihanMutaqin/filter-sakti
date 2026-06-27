@@ -7,11 +7,12 @@ interface DataTableProps {
   data: DataRow[];
   columns: string[];
   visible: boolean;
+  mode: string;
 }
 
 const ROWS_PER_PAGE = 50;
 
-export function DataTable({ data, columns, visible }: DataTableProps) {
+export function DataTable({ data: rawData, columns, visible, mode }: DataTableProps) {
   const [page, setPage] = useState(1);
   const [copied, setCopied] = useState(false);
 
@@ -20,6 +21,15 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
   const [checkedRows, setCheckedRows] = useState<Set<number>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [excludeC00, setExcludeC00] = useState(false);
+
+  // Filter rawData based on excludeC00 so table and copy are both affected
+  const data = useMemo(() => {
+    if (!excludeC00) return rawData;
+    return rawData.filter(row => {
+      const sc = String(row['SC Order No/Track ID/CSRM No'] || '').trim().toUpperCase();
+      return !sc.startsWith('C00');
+    });
+  }, [rawData, excludeC00]);
 
   // Listen for Ctrl+0 to toggle dev mode
   useEffect(() => {
@@ -31,7 +41,8 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
             // turning off → clear selections
             setCheckedRows(new Set());
             setSelectedCategory('');
-            setExcludeC00(false);
+            // Do not reset excludeC00 if we are in MODOROSO where it's public
+            if (mode !== 'MODOROSO') setExcludeC00(false);
           }
           return !prev;
         });
@@ -80,15 +91,8 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
     } else if (selectedCategory) {
       base = data.filter(row => String(row['Status']).trim() === selectedCategory);
     }
-    
-    if (excludeC00) {
-      base = base.filter(row => {
-        const sc = String(row['SC Order No/Track ID/CSRM No'] || '').trim().toUpperCase();
-        return !sc.startsWith('C00');
-      });
-    }
     return base;
-  }, [data, devMode, checkedRows, selectedCategory, excludeC00]);
+  }, [data, devMode, checkedRows, selectedCategory]);
 
   const handleCopy = useCallback(() => {
     const text = targetDataForCopy
@@ -188,8 +192,8 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
             </select>
           )}
 
-          {/* Exclude C00 Checkbox (Dev Mode) */}
-          {devMode && columns.includes('SC Order No/Track ID/CSRM No') && (
+          {/* Exclude C00 Checkbox (Public for MODOROSO, Dev Mode for others) */}
+          {(mode === 'MODOROSO' || devMode) && columns.includes('SC Order No/Track ID/CSRM No') && (
             <label style={{
               display: 'flex', alignItems: 'center', gap: 6,
               fontSize: 12, fontWeight: 500, color: '#374151',
@@ -198,7 +202,10 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
               <input
                 type="checkbox"
                 checked={excludeC00}
-                onChange={e => setExcludeC00(e.target.checked)}
+                onChange={e => {
+                  setExcludeC00(e.target.checked);
+                  setCheckedRows(new Set());
+                }}
                 style={{ width: 13, height: 13, cursor: 'pointer', accentColor: '#2563EB' }}
               />
               Exclude C00
@@ -219,7 +226,7 @@ export function DataTable({ data, columns, visible }: DataTableProps) {
           >
             {copied
               ? <><Check style={{ width: 13, height: 13 }} />Tersalin!</>
-              : devMode
+              : (devMode || excludeC00)
                 ? <><Copy style={{ width: 13, height: 13 }} />Salin {targetDataForCopy.length} baris</>
                 : <><Copy style={{ width: 13, height: 13 }} />Salin Data</>
             }
