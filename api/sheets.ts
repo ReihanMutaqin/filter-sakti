@@ -6,7 +6,7 @@ const SPREADSHEET_NAME = 'Salinan dari NEW GDOC WSA FULFILLMENT';
 const SHEET_NAME_MAP: Record<string, string | null> = {
   WSA: null,         // null = sheet pertama
   WAPPR: null,       // null = sheet pertama
-  MODOROSO: 'MODOROSO_JAKTIMSEL',
+  MODOROSO: 'FINAL DATA BERJALAN',
 };
 
 const CHECK_COL_MAP: Record<string, string> = {
