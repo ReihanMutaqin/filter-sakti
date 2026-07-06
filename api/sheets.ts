@@ -96,8 +96,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const headers = rows[0] as string[];
-    // Trim whitespace on headers to avoid invisible mismatch
-    const colIdx = headers.findIndex(h => h.trim() === checkCol.trim());
+    // Trim whitespace + case-insensitive match to handle column name variations
+    const colIdx = headers.findIndex(h => h.trim().toLowerCase() === checkCol.trim().toLowerCase());
     const ids: string[] = colIdx >= 0
       ? rows.slice(1)
           .map(r => String(r[colIdx] ?? '')
