@@ -6,12 +6,12 @@ const SPREADSHEET_NAME = 'Salinan dari NEW GDOC WSA FULFILLMENT';
 const SHEET_NAME_MAP: Record<string, string | null> = {
   WSA: null,         // null = sheet pertama
   WAPPR: null,       // null = sheet pertama
-  MODOROSO: 'FINAL DATA BERJALAN',
+  MODOROSO: 'MODOROSO_JAKTIMSEL',
 };
 
 const CHECK_COL_MAP: Record<string, string> = {
-  WSA:      'SC Order No/Track ID/CSRM No',
-  WAPPR:    'Workorder',
+  WSA: 'SC Order No/Track ID/CSRM No',
+  WAPPR: 'Workorder',
   MODOROSO: 'Workorder',
 };
 
@@ -100,12 +100,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const colIdx = headers.findIndex(h => h.trim().toLowerCase() === checkCol.trim().toLowerCase());
     const ids: string[] = colIdx >= 0
       ? rows.slice(1)
-          .map(r => String(r[colIdx] ?? '')
-            .trim()
-            .replace(/\.0$/, '')   // strip float suffix
-            .split('_')[0]         // strip _suffix (same as Python x.split('_')[0])
-            .trim())
-          .filter(Boolean)
+        .map(r => String(r[colIdx] ?? '')
+          .trim()
+          .replace(/\.0$/, '')   // strip float suffix
+          .split('_')[0]         // strip _suffix (same as Python x.split('_')[0])
+          .trim())
+        .filter(Boolean)
       : [];
 
     return res.status(200).json({
