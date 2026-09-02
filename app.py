@@ -267,6 +267,8 @@ def proses_wsa(df):
     df = df[df[col_sc].astype(str).str.contains('AO|PDA|WSA', na=False)]
     if 'CRM Order Type' in df.columns:
         df = df[df['CRM Order Type'].isin(['CREATE', 'MIGRATE'])]
+    if 'Status' in df.columns:
+        df = df[df['Status'].astype(str).str.strip().str.upper() != 'WAPPR']
     if 'Contact Number' in df.columns and 'Customer Name' in df.columns:
         c_map = df.loc[df['Contact Number'].notna() & (df['Contact Number'] != ''), ['Customer Name', 'Contact Number']].drop_duplicates('Customer Name')
         c_dict = dict(zip(c_map['Customer Name'], c_map['Contact Number']))

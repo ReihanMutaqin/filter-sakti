@@ -72,6 +72,13 @@ function processWSA(data: DataRow[]): { filtered: DataRow[]; checkCol: string } 
     });
   }
 
+  if (df.some(r => 'Status' in r)) {
+    df = df.filter(row => {
+      const status = toStr(row['Status']).trim().toUpperCase();
+      return status !== 'WAPPR';
+    });
+  }
+
   if (df.some(r => 'Contact Number' in r) && df.some(r => 'Customer Name' in r)) {
     df = fillContactNumbers(df);
   }
